@@ -20,8 +20,7 @@ package org.wso2.andes.configuration.qpid;
 
 import org.wso2.andes.AMQException;
 
-public interface SessionConfig extends ConfiguredObject<SessionConfigType, SessionConfig>
-{
+public interface SessionConfig extends ConfiguredObject<SessionConfigType, SessionConfig> {
     VirtualHostConfig getVirtualHost();
 
     String getSessionName();
@@ -37,7 +36,7 @@ public interface SessionConfig extends ConfiguredObject<SessionConfigType, Sessi
     Long getExpiryTime();
 
     Long getMaxClientRate();
-    
+
     Long getTxnStarts();
 
     Long getTxnCommits();
@@ -45,8 +44,8 @@ public interface SessionConfig extends ConfiguredObject<SessionConfigType, Sessi
     Long getTxnRejects();
 
     Long getTxnCount();
-    
+
     boolean isTransactional();
-    
+
     void mgmtClose() throws AMQException;
 }

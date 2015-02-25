@@ -18,14 +18,13 @@
 
 package org.wso2.andes.configuration.qpid;
 
-import java.util.UUID;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class SystemConfigImpl implements SystemConfig
-{
+public class SystemConfigImpl implements SystemConfig {
     private static final String OS_NAME = System.getProperty("os.name");
     private static final String OS_ARCH = System.getProperty("os.arch");
     private static final String OS_VERSION = System.getProperty("os.version");
@@ -40,93 +39,75 @@ public class SystemConfigImpl implements SystemConfig
     private final long _createTime = System.currentTimeMillis();
     private final ConfigStore _store;
 
-    public SystemConfigImpl(ConfigStore store)
-    {
+    public SystemConfigImpl(ConfigStore store) {
         this(store.createId(), store);
     }
 
-    public SystemConfigImpl(UUID id, ConfigStore store)
-    {
+    public SystemConfigImpl(UUID id, ConfigStore store) {
         _id = id;
         _store = store;
         String host;
-        try
-        {
+        try {
             InetAddress addr = InetAddress.getLocalHost();
             host = addr.getHostName();
-        }
-        catch (UnknownHostException e)
-        {
-            host="localhost";
+        } catch (UnknownHostException e) {
+            host = "localhost";
         }
         _host = host;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return _name;
     }
 
-    public String getOperatingSystemName()
-    {
+    public String getOperatingSystemName() {
         return OS_NAME;
     }
 
-    public String getNodeName()
-    {
+    public String getNodeName() {
         return _host;
     }
 
-    public String getOSRelease()
-    {
+    public String getOSRelease() {
         return OS_VERSION;
     }
 
-    public String getOSVersion()
-    {
+    public String getOSVersion() {
         return "";
     }
 
-    public String getOSArchitecture()
-    {
+    public String getOSArchitecture() {
         return OS_ARCH;
     }
 
-    public UUID getId()
-    {
+    public UUID getId() {
         return _id;
     }
 
-    public SystemConfigType getConfigType()
-    {
+    public SystemConfigType getConfigType() {
         return SystemConfigType.getInstance();
     }
 
-    public ConfiguredObject getParent()
-    {
+    public ConfiguredObject getParent() {
         return null;
     }
 
-    public boolean isDurable()
-    {
+    public boolean isDurable() {
         return false;
     }
 
-    public void addBroker(final BrokerConfig broker)
-    {
+    public void addBroker(final BrokerConfig broker) {
         broker.setSystem(this);
         _store.addConfiguredObject(broker);
         _brokers.put(broker.getId(), broker);
     }
 
-    public void removeBroker(final BrokerConfig broker)
-    {
+    public void removeBroker(final BrokerConfig broker) {
         _brokers.remove(broker.getId());
         _store.removeConfiguredObject(broker);
     }
 
-    public long getCreateTime()
-    {
+    public long getCreateTime() {
         return _createTime;
     }
 

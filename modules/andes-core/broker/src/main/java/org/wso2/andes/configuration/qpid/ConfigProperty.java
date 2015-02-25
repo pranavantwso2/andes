@@ -18,8 +18,7 @@
 
 package org.wso2.andes.configuration.qpid;
 
-public interface ConfigProperty<T extends ConfigObjectType<T,C>, C extends ConfiguredObject<T,C>,  S>
-{
+public interface ConfigProperty<T extends ConfigObjectType<T, C>, C extends ConfiguredObject<T, C>, S> {
     public String getName();
 
     public S getValue(C object);
@@ -28,36 +27,29 @@ public interface ConfigProperty<T extends ConfigObjectType<T,C>, C extends Confi
 
     public void clearValue(C object);
 
-    public abstract static class ReadWriteConfigProperty<T extends ConfigObjectType<T,C>, C extends ConfiguredObject<T,C>,S> implements ConfigProperty<T, C, S>
-    {
+    public abstract static class ReadWriteConfigProperty<T extends ConfigObjectType<T, C>, C extends ConfiguredObject<T, C>, S> implements ConfigProperty<T, C, S> {
         private final String _name;
 
-        protected ReadWriteConfigProperty(String name)
-        {
+        protected ReadWriteConfigProperty(String name) {
             _name = name;
         }
 
-        public final String getName()
-        {
+        public final String getName() {
             return _name;
         }
     }
 
-    public abstract static class ReadOnlyConfigProperty<T extends ConfigObjectType<T,C>, C extends ConfiguredObject<T,C>, S> extends ReadWriteConfigProperty<T, C, S>
-    {
-        protected ReadOnlyConfigProperty(String name)
-        {
+    public abstract static class ReadOnlyConfigProperty<T extends ConfigObjectType<T, C>, C extends ConfiguredObject<T, C>, S> extends ReadWriteConfigProperty<T, C, S> {
+        protected ReadOnlyConfigProperty(String name) {
             super(name);
         }
 
-        public final void setValue(C object, S value)
-        {
-            throw new UnsupportedOperationException("Cannot set value '"+getName()+"' as this property is read-only");
+        public final void setValue(C object, S value) {
+            throw new UnsupportedOperationException("Cannot set value '" + getName() + "' as this property is read-only");
         }
 
-        public final void clearValue(C object)
-        {
-            throw new UnsupportedOperationException("Cannot set value '"+getName()+"' as this property is read-only");
+        public final void clearValue(C object) {
+            throw new UnsupportedOperationException("Cannot set value '" + getName() + "' as this property is read-only");
         }
     }
 }

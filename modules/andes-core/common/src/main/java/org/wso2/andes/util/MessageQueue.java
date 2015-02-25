@@ -28,8 +28,7 @@ import java.util.Queue;
  * @todo Seems like this may be pointless, the implementation uses this method to increment the message count
  *       then calls offer. Why not simply override offer and drop this interface?
  */
-public interface MessageQueue<E> extends Queue<E>
-{
+public interface MessageQueue<E> extends Queue<E> {
     /**
      * Inserts the specified element into this queue, if possible. When using queues that may impose insertion
      * restrictions (for example capacity bounds), method offer is generally preferable to method Collection.add(E),

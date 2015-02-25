@@ -23,8 +23,7 @@ import org.wso2.andes.server.exchange.ExchangeType;
 import java.util.Map;
 
 
-public interface ExchangeConfig extends ConfiguredObject<ExchangeConfigType, ExchangeConfig>
-{
+public interface ExchangeConfig extends ConfiguredObject<ExchangeConfigType, ExchangeConfig> {
     VirtualHostConfig getVirtualHost();
 
     String getName();

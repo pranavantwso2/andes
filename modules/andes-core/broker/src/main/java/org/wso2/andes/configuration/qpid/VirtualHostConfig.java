@@ -18,8 +18,7 @@
 
 package org.wso2.andes.configuration.qpid;
 
-public interface VirtualHostConfig extends ConfiguredObject<VirtualHostConfigType, VirtualHostConfig>
-{
+public interface VirtualHostConfig extends ConfiguredObject<VirtualHostConfigType, VirtualHostConfig> {
     String getName();
 
     BrokerConfig getBroker();

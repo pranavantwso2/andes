@@ -20,79 +20,70 @@ package org.wso2.andes.tools.messagestore;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.configuration.ConfigurationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wso2.andes.configuration.qpid.Configuration;
 import org.wso2.andes.server.exchange.Exchange;
+import org.wso2.andes.server.queue.AMQQueue;
 import org.wso2.andes.server.registry.ApplicationRegistry;
 import org.wso2.andes.server.registry.ConfigurationFileApplicationRegistry;
 import org.wso2.andes.server.store.MemoryMessageStore;
 import org.wso2.andes.server.virtualhost.VirtualHost;
-import org.wso2.andes.server.queue.AMQQueue;
-import org.wso2.andes.tools.messagestore.commands.Clear;
-import org.wso2.andes.tools.messagestore.commands.Command;
-import org.wso2.andes.tools.messagestore.commands.Copy;
-import org.wso2.andes.tools.messagestore.commands.Dump;
-import org.wso2.andes.tools.messagestore.commands.Help;
+import org.wso2.andes.tools.messagestore.commands.*;
 import org.wso2.andes.tools.messagestore.commands.List;
-import org.wso2.andes.tools.messagestore.commands.Load;
-import org.wso2.andes.tools.messagestore.commands.Quit;
-import org.wso2.andes.tools.messagestore.commands.Select;
-import org.wso2.andes.tools.messagestore.commands.Show;
-import org.wso2.andes.tools.messagestore.commands.Move;
-import org.wso2.andes.tools.messagestore.commands.Purge;
 import org.wso2.andes.tools.utils.CommandParser;
 import org.wso2.andes.tools.utils.Console;
 import org.wso2.andes.tools.utils.SimpleCommandParser;
 import org.wso2.andes.tools.utils.SimpleConsole;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.io.*;
+import java.util.*;
 
 /**
  * MessageStoreTool.
  */
-public class MessageStoreTool
-{
-    /** Text outputted at the start of each console.*/
+public class MessageStoreTool {
+    /**
+     * Text outputted at the start of each console.
+     */
     private static final String BOILER_PLATE = "MessageStoreTool - for examining Persistent Qpid Broker MessageStore instances";
 
-    /** I/O Wrapper. */
+    /**
+     * I/O Wrapper.
+     */
     protected Console _console;
 
-    /** Batch mode flag. */
+    /**
+     * Batch mode flag.
+     */
     protected boolean _batchMode;
 
-    /** Internal State object. */
+    /**
+     * Internal State object.
+     */
     private State _state = new State();
 
     private HashMap<String, Command> _commands = new HashMap<String, Command>();
 
-    /** SLF4J Logger. */
+    /**
+     * SLF4J Logger.
+     */
     private static Logger _devlog = LoggerFactory.getLogger(MessageStoreTool.class);
 
-    /** Loaded configuration file. */
+    /**
+     * Loaded configuration file.
+     */
     private Configuration _config;
 
-    /** Control used for main run loop. */
+    /**
+     * Control used for main run loop.
+     */
     private boolean _running = true;
     private boolean _initialised = false;
 
     //---------------------------------------------------------------------------------------------------/
 
-    public static void main(String[] args) throws Configuration.InitException
-    {
+    public static void main(String[] args) throws Configuration.InitException {
 
         MessageStoreTool tool = new MessageStoreTool(args);
 
@@ -100,13 +91,11 @@ public class MessageStoreTool
     }
 
 
-    public MessageStoreTool(String[] args) throws Configuration.InitException
-    {
+    public MessageStoreTool(String[] args) throws Configuration.InitException {
         this(args, System.in, System.out);
     }
 
-    public MessageStoreTool(String[] args, InputStream in, OutputStream out) throws Configuration.InitException
-    {
+    public MessageStoreTool(String[] args, InputStream in, OutputStream out) throws Configuration.InitException {
         BufferedReader consoleReader = new BufferedReader(new InputStreamReader(in));
         BufferedWriter consoleWriter = new BufferedWriter(new OutputStreamWriter(out));
 
@@ -122,15 +111,14 @@ public class MessageStoreTool
     }
 
 
-    private void setOptions()
-    {
+    private void setOptions() {
         Option help = new Option("h", "help", false, "print this message");
         Option version = new Option("v", "version", false, "print the version information and exit");
         Option configFile =
                 OptionBuilder.withArgName("file").hasArg()
                         .withDescription("use given configuration file By "
-                                         + "default looks for a file named "
-                                         + Configuration.DEFAULT_CONFIG_FILE + " in " + Configuration.QPID_HOME)
+                                + "default looks for a file named "
+                                + Configuration.DEFAULT_CONFIG_FILE + " in " + Configuration.QPID_HOME)
                         .withLongOpt("config")
                         .create("c");
 
@@ -139,56 +127,46 @@ public class MessageStoreTool
         _config.setOption(configFile);
     }
 
-    public State getState()
-    {
+    public State getState() {
         return _state;
     }
 
-    public Map<String, Command> getCommands()
-    {
+    public Map<String, Command> getCommands() {
         return _commands;
     }
 
-    public void setConfigurationFile(String configfile) throws Configuration.InitException
-    {
+    public void setConfigurationFile(String configfile) throws Configuration.InitException {
         _config.loadConfig(new File(configfile));
         setup();
     }
 
-    public Console getConsole()
-    {
+    public Console getConsole() {
         return _console;
     }
 
-    public void setConsole(Console console)
-    {
+    public void setConsole(Console console) {
         _console = console;
     }
 
     /**
      * Simple ShutdownHook to cleanly shutdown the databases
      */
-    static class ShutdownHook implements Runnable
-    {
+    static class ShutdownHook implements Runnable {
         MessageStoreTool _tool;
 
-        ShutdownHook(MessageStoreTool messageStoreTool)
-        {
+        ShutdownHook(MessageStoreTool messageStoreTool) {
             _tool = messageStoreTool;
         }
 
-        public void run()
-        {
+        public void run() {
             _tool.quit();
         }
     }
 
-    public void quit()
-    {
+    public void quit() {
         _running = false;
 
-        if (_initialised)
-        {
+        if (_initialised) {
             ApplicationRegistry.remove();
         }
 
@@ -197,20 +175,17 @@ public class MessageStoreTool
         _console.close();
     }
 
-    public void setBatchMode(boolean batchmode)
-    {
+    public void setBatchMode(boolean batchmode) {
         _batchMode = batchmode;
     }
 
     /**
      * Main loop
      */
-    protected void start()
-    {
+    protected void start() {
         setup();
 
-        if (!_initialised)
-        {
+        if (!_initialised) {
             System.exit(1);
         }
 
@@ -221,8 +196,7 @@ public class MessageStoreTool
         runCLI();
     }
 
-    private void setup()
-    {
+    private void setup() {
         loadDefaultVirtualHosts();
 
         loadCommands();
@@ -230,8 +204,7 @@ public class MessageStoreTool
         _state.clearAll();
     }
 
-    private void loadCommands()
-    {
+    private void loadCommands() {
         _commands.clear();
         //todo Dynamically load the classes that exis in com.redhat.etp.qpid.commands
         _commands.put("close", new Clear(this));
@@ -247,28 +220,22 @@ public class MessageStoreTool
         _commands.put("show", new Show(this));
     }
 
-    private void loadDefaultVirtualHosts()
-    {
+    private void loadDefaultVirtualHosts() {
         final File configFile = _config.getConfigFile();
 
         loadVirtualHosts(configFile);
     }
 
-    private void loadVirtualHosts(File configFile)
-    {
+    private void loadVirtualHosts(File configFile) {
 
-        if (!configFile.exists())
-        {
+        if (!configFile.exists()) {
             _devlog.error("Config file not found:" + configFile.getAbsolutePath());
             return;
-        }
-        else
-        {
+        } else {
             _devlog.debug("using config file :" + configFile.getAbsolutePath());
         }
 
-        try
-        {
+        try {
             ConfigurationFileApplicationRegistry registry = new ConfigurationFileApplicationRegistry(configFile);
 
             ApplicationRegistry.remove();
@@ -277,14 +244,10 @@ public class MessageStoreTool
 
             checkMessageStores();
             _initialised = true;
-        }
-        catch (ConfigurationException e)
-        {
+        } catch (ConfigurationException e) {
             _console.println("Unable to load configuration due to configuration error: " + e.getMessage());
             e.printStackTrace();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             _console.println("Unable to load configuration due to: " + e.getMessage());
             e.printStackTrace();
         }
@@ -292,50 +255,40 @@ public class MessageStoreTool
 
     }
 
-    private void checkMessageStores()
-    {
+    private void checkMessageStores() {
         Collection<VirtualHost> vhosts = ApplicationRegistry.getInstance().getVirtualHostRegistry().getVirtualHosts();
 
         boolean warning = false;
-        for (VirtualHost vhost : vhosts)
-        {
-            if (vhost.getMessageStore() instanceof MemoryMessageStore)
-            {
+        for (VirtualHost vhost : vhosts) {
+            if (vhost.getMessageStore() instanceof MemoryMessageStore) {
                 _console.println("WARNING: Virtualhost '" + vhost.getName() + "' is using a MemoryMessageStore. "
-                                 + "Changes will not persist.");
+                        + "Changes will not persist.");
                 warning = true;
             }
         }
 
-        if (warning)
-        {
+        if (warning) {
             _console.println("");
             _console.println("Please ensure you are using the correct config file currently using '"
-                             + _config.getConfigFile().getAbsolutePath() + "'");
+                    + _config.getConfigFile().getAbsolutePath() + "'");
             _console.println("New config file can be specifed by 'load <config file>' or -c on the commandline.");
             _console.println("");
         }
     }
 
-    private void runCLI()
-    {
-        while (_running)
-        {
-            if (!_batchMode)
-            {
+    private void runCLI() {
+        while (_running) {
+            if (!_batchMode) {
                 printPrompt();
             }
 
             String[] args = _console.readCommand();
 
-            while (args != null)
-            {
+            while (args != null) {
                 exec(args);
 
-                if (_running)
-                {
-                    if (!_batchMode)
-                    {
+                if (_running) {
+                    if (!_batchMode) {
                         printPrompt();
                     }
 
@@ -345,8 +298,7 @@ public class MessageStoreTool
         }
     }
 
-    private void printPrompt()
-    {
+    private void printPrompt() {
         _console.print(prompt());
     }
 
@@ -356,23 +308,19 @@ public class MessageStoreTool
      *
      * @param script The file script
      */
-    protected void runScripts(String script)
-    {
+    protected void runScripts(String script) {
         //Store Current State
         boolean oldBatch = _batchMode;
         CommandParser oldParser = _console.getCommandParser();
         setBatchMode(true);
 
-        try
-        {
+        try {
             _devlog.debug("Running script '" + script + "'");
 
             _console.setCommandParser(new SimpleCommandParser(new BufferedReader(new FileReader(script))));
 
             start();
-        }
-        catch (java.io.FileNotFoundException e)
-        {
+        } catch (java.io.FileNotFoundException e) {
             _devlog.error("Script not found: '" + script + "' due to:" + e.getMessage());
         }
 
@@ -381,15 +329,11 @@ public class MessageStoreTool
         setBatchMode(oldBatch);
     }
 
-    public String prompt()
-    {
+    public String prompt() {
         String state = _state.toString();
-        if (state != null && state.length() != 0)
-        {
+        if (state != null && state.length() != 0) {
             return state + ":bdb$ ";
-        }
-        else
-        {
+        } else {
             return "bdb$ ";
         }
     }
@@ -399,11 +343,9 @@ public class MessageStoreTool
      *
      * @param args [command, arg0, arg1...].
      */
-    protected void exec(String[] args)
-    {
+    protected void exec(String[] args) {
         // Comment lines start with a #
-        if (args.length == 0 || args[0].startsWith("#"))
-        {
+        if (args.length == 0 || args[0].startsWith("#")) {
             return;
         }
 
@@ -411,12 +353,9 @@ public class MessageStoreTool
 
         Command cmd = _commands.get(command);
 
-        if (cmd == null)
-        {
+        if (cmd == null) {
             _console.println("Command not understood: " + command);
-        }
-        else
-        {
+        } else {
             cmd.execute(args);
         }
     }
@@ -425,8 +364,7 @@ public class MessageStoreTool
     /**
      * Displays usage info.
      */
-    protected static void help()
-    {
+    protected static void help() {
         System.out.println(BOILER_PLATE);
         System.out.println("Usage: java " + MessageStoreTool.class + " [Options]");
         System.out.println("       [-c <broker config file>] : Defaults to \"$QPID_HOME/etc/config.xml\"");
@@ -435,74 +373,59 @@ public class MessageStoreTool
 
     /**
      * This class is used to store the current state of the tool.
-     *
+     * <p/>
      * This is then interrogated by the various commands to augment their behaviour.
-     *
-     *
      */
-    public static class State
-    {
+    public static class State {
         private VirtualHost _vhost = null;
         private AMQQueue _queue = null;
         private Exchange _exchange = null;
         private java.util.List<Long> _msgids = null;
 
-        public State()
-        {
+        public State() {
         }
 
-        public void setQueue(AMQQueue queue)
-        {
+        public void setQueue(AMQQueue queue) {
             _queue = queue;
         }
 
-        public AMQQueue getQueue()
-        {
+        public AMQQueue getQueue() {
             return _queue;
         }
 
-        public void setVhost(VirtualHost vhost)
-        {
+        public void setVhost(VirtualHost vhost) {
             _vhost = vhost;
         }
 
-        public VirtualHost getVhost()
-        {
+        public VirtualHost getVhost() {
             return _vhost;
         }
 
-        public Exchange getExchange()
-        {
+        public Exchange getExchange() {
             return _exchange;
         }
 
-        public void setExchange(Exchange exchange)
-        {
+        public void setExchange(Exchange exchange) {
             _exchange = exchange;
         }
 
-        public String toString()
-        {
+        public String toString() {
             StringBuilder status = new StringBuilder();
 
-            if (_vhost != null)
-            {
+            if (_vhost != null) {
                 status.append(_vhost.getName());
 
-                if (_exchange != null)
-                {
+                if (_exchange != null) {
                     status.append("[");
                     status.append(_exchange.getNameShortString());
                     status.append("]");
 
-                    if (_queue != null)
-                    {
+                    if (_queue != null) {
                         status.append("->'");
                         status.append(_queue.getNameShortString());
                         status.append("'");
 
-                        if (_msgids != null)
-                        {
+                        if (_msgids != null) {
                             status.append(printMessages());
                         }
                     }
@@ -513,36 +436,26 @@ public class MessageStoreTool
         }
 
 
-        public String printMessages()
-        {
+        public String printMessages() {
             StringBuilder sb = new StringBuilder();
 
             Long previous = null;
 
             Long start = null;
-            for (Long id : _msgids)
-            {
-                if (previous != null)
-                {
-                    if (id == previous + 1)
-                    {
-                        if (start == null)
-                        {
+            for (Long id : _msgids) {
+                if (previous != null) {
+                    if (id == previous + 1) {
+                        if (start == null) {
                             start = previous;
                         }
-                    }
-                    else
-                    {
-                        if (start != null)
-                        {
+                    } else {
+                        if (start != null) {
                             sb.append(",");
                             sb.append(start);
                             sb.append("-");
                             sb.append(id);
                             start = null;
-                        }
-                        else
-                        {
+                        } else {
                             sb.append(",");
                             sb.append(previous);
                         }
@@ -552,15 +465,12 @@ public class MessageStoreTool
                 previous = id;
             }
 
-            if (start != null)
-            {
+            if (start != null) {
                 sb.append(",");
                 sb.append(start);
                 sb.append("-");
                 sb.append(_msgids.get(_msgids.size() - 1));
-            }
-            else
-            {
+            } else {
                 sb.append(",");
                 sb.append(previous);
             }
@@ -571,26 +481,22 @@ public class MessageStoreTool
             return sb.toString();
         }
 
-        public void clearAll()
-        {
+        public void clearAll() {
             _vhost = null;
             clearExchange();
         }
 
-        public void clearExchange()
-        {
+        public void clearExchange() {
             _exchange = null;
             clearQueue();
         }
 
-        public void clearQueue()
-        {
+        public void clearQueue() {
             _queue = null;
             clearMessages();
         }
 
-        public void clearMessages()
-        {
+        public void clearMessages() {
             _msgids = null;
         }
 
@@ -602,46 +508,36 @@ public class MessageStoreTool
          *
          * @param msgString string of msg ids to parse 1,2,4-10
          */
-        public void setMessages(String msgString)
-        {
+        public void setMessages(String msgString) {
             StringTokenizer tok = new StringTokenizer(msgString, ",");
 
-            if (tok.hasMoreTokens())
-            {
+            if (tok.hasMoreTokens()) {
                 _msgids = new LinkedList<Long>();
             }
 
-            while (tok.hasMoreTokens())
-            {
+            while (tok.hasMoreTokens()) {
                 String next = tok.nextToken();
-                if (next.contains("-"))
-                {
+                if (next.contains("-")) {
                     Long start = Long.parseLong(next.substring(0, next.indexOf("-")));
                     Long end = Long.parseLong(next.substring(next.indexOf("-") + 1));
 
-                    if (end >= start)
-                    {
-                        for (long l = start; l <= end; l++)
-                        {
+                    if (end >= start) {
+                        for (long l = start; l <= end; l++) {
                             _msgids.add(l);
                         }
                     }
-                }
-                else
-                {
+                } else {
                     _msgids.add(Long.parseLong(next));
                 }
             }
 
         }
 
-        public void setMessages(java.util.List<Long> msgids)
-        {
+        public void setMessages(java.util.List<Long> msgids) {
             _msgids = msgids;
         }
 
-        public java.util.List<Long> getMessages()
-        {
+        public java.util.List<Long> getMessages() {
             return _msgids;
         }
     }//Class State

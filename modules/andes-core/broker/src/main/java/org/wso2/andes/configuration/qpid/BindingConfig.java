@@ -21,8 +21,7 @@ package org.wso2.andes.configuration.qpid;
 import java.util.Map;
 
 
-public interface BindingConfig extends ConfiguredObject<BindingConfigType, BindingConfig>
-{
+public interface BindingConfig extends ConfiguredObject<BindingConfigType, BindingConfig> {
 
     ExchangeConfig getExchange();
 

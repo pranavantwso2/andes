@@ -19,8 +19,7 @@
 package org.wso2.andes.configuration.qpid;
 
 
-public interface BrokerConfig  extends ConfiguredObject<BrokerConfigType,BrokerConfig>
-{
+public interface BrokerConfig extends ConfiguredObject<BrokerConfigType, BrokerConfig> {
     void setSystem(SystemConfig system);
 
     SystemConfig getSystem();

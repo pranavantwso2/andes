@@ -21,8 +21,7 @@ package org.wso2.andes.configuration.qpid;
 import java.util.Map;
 
 
-public interface SubscriptionConfig extends ConfiguredObject<SubscriptionConfigType, SubscriptionConfig>
-{
+public interface SubscriptionConfig extends ConfiguredObject<SubscriptionConfigType, SubscriptionConfig> {
 
     SessionConfig getSessionConfig();
 

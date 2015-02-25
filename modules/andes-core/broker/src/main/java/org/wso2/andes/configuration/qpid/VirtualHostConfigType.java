@@ -18,74 +18,62 @@
 
 package org.wso2.andes.configuration.qpid;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-public class VirtualHostConfigType extends ConfigObjectType<VirtualHostConfigType, VirtualHostConfig>
-{
+public class VirtualHostConfigType extends ConfigObjectType<VirtualHostConfigType, VirtualHostConfig> {
     private static final List<VirtualHostProperty<?>> VIRTUAL_HOST_PROPERTIES = new ArrayList<VirtualHostProperty<?>>();
     private static final VirtualHostConfigType INSTANCE = new VirtualHostConfigType();
-public static interface VirtualHostProperty<S> extends ConfigProperty<VirtualHostConfigType, VirtualHostConfig, S>
-    {
+
+    public static interface VirtualHostProperty<S> extends ConfigProperty<VirtualHostConfigType, VirtualHostConfig, S> {
     }
 
-    private abstract static class VirtualHostReadWriteProperty<S>  extends ConfigProperty.ReadWriteConfigProperty<VirtualHostConfigType, VirtualHostConfig, S> implements VirtualHostProperty<S>
-    {
-        public VirtualHostReadWriteProperty(String name)
-        {
+    private abstract static class VirtualHostReadWriteProperty<S> extends ConfigProperty.ReadWriteConfigProperty<VirtualHostConfigType, VirtualHostConfig, S> implements VirtualHostProperty<S> {
+        public VirtualHostReadWriteProperty(String name) {
             super(name);
             VIRTUAL_HOST_PROPERTIES.add(this);
         }
     }
 
-    private abstract static class VirtualHostReadOnlyProperty<S> extends ConfigProperty.ReadOnlyConfigProperty<VirtualHostConfigType, VirtualHostConfig, S> implements VirtualHostProperty<S>
-    {
-        public VirtualHostReadOnlyProperty(String name)
-        {
+    private abstract static class VirtualHostReadOnlyProperty<S> extends ConfigProperty.ReadOnlyConfigProperty<VirtualHostConfigType, VirtualHostConfig, S> implements VirtualHostProperty<S> {
+        public VirtualHostReadOnlyProperty(String name) {
             super(name);
             VIRTUAL_HOST_PROPERTIES.add(this);
         }
     }
 
 
-    public static final VirtualHostReadOnlyProperty<String> NAME_PROPERTY = new VirtualHostReadOnlyProperty<String>("name")
-    {
-        public String getValue(VirtualHostConfig object)
-        {
+    public static final VirtualHostReadOnlyProperty<String> NAME_PROPERTY = new VirtualHostReadOnlyProperty<String>("name") {
+        public String getValue(VirtualHostConfig object) {
             return object.getName();
         }
     };
 
 
-    public static final VirtualHostReadOnlyProperty<BrokerConfig> BROKER_PROPERTY = new VirtualHostReadOnlyProperty<BrokerConfig>("broker")
-    {
-        public BrokerConfig getValue(VirtualHostConfig object)
-        {
+    public static final VirtualHostReadOnlyProperty<BrokerConfig> BROKER_PROPERTY = new VirtualHostReadOnlyProperty<BrokerConfig>("broker") {
+        public BrokerConfig getValue(VirtualHostConfig object) {
             return object.getBroker();
         }
     };
 
-    public static final VirtualHostReadOnlyProperty<String> FEDERATION_TAG_PROPERTY = new VirtualHostReadOnlyProperty<String>("federationTag")
-    {
-        public String getValue(VirtualHostConfig object)
-        {
+    public static final VirtualHostReadOnlyProperty<String> FEDERATION_TAG_PROPERTY = new VirtualHostReadOnlyProperty<String>("federationTag") {
+        public String getValue(VirtualHostConfig object) {
             return object.getFederationTag();
         }
     };
 
 
-
-    public Collection<? extends ConfigProperty<VirtualHostConfigType, VirtualHostConfig, ?>> getProperties()
-    {
+    public Collection<? extends ConfigProperty<VirtualHostConfigType, VirtualHostConfig, ?>> getProperties() {
         return Collections.unmodifiableList(VIRTUAL_HOST_PROPERTIES);
     }
 
 
-    private VirtualHostConfigType()
-    {
+    private VirtualHostConfigType() {
     }
 
-    public static VirtualHostConfigType getInstance()
-    {
+    public static VirtualHostConfigType getInstance() {
         return INSTANCE;
     }
 

@@ -20,89 +20,69 @@ package org.wso2.andes.configuration.qpid;
 
 import java.util.*;
 
-public final class ExchangeConfigType extends ConfigObjectType<ExchangeConfigType, ExchangeConfig>
-{
+public final class ExchangeConfigType extends ConfigObjectType<ExchangeConfigType, ExchangeConfig> {
     private static final List<ExchangeProperty<?>> EXCHANGE_PROPERTIES = new ArrayList<ExchangeProperty<?>>();
 
-    public static interface ExchangeProperty<S> extends ConfigProperty<ExchangeConfigType, ExchangeConfig, S>
-    {
+    public static interface ExchangeProperty<S> extends ConfigProperty<ExchangeConfigType, ExchangeConfig, S> {
     }
 
-    private abstract static class ExchangeReadWriteProperty<S>  extends ConfigProperty.ReadWriteConfigProperty<ExchangeConfigType, ExchangeConfig, S> implements ExchangeProperty<S>
-    {
-        public ExchangeReadWriteProperty(String name)
-        {
+    private abstract static class ExchangeReadWriteProperty<S> extends ConfigProperty.ReadWriteConfigProperty<ExchangeConfigType, ExchangeConfig, S> implements ExchangeProperty<S> {
+        public ExchangeReadWriteProperty(String name) {
             super(name);
             EXCHANGE_PROPERTIES.add(this);
         }
     }
 
-    private abstract static class ExchangeReadOnlyProperty<S> extends ConfigProperty.ReadOnlyConfigProperty<ExchangeConfigType, ExchangeConfig, S> implements ExchangeProperty<S>
-    {
-        public ExchangeReadOnlyProperty(String name)
-        {
+    private abstract static class ExchangeReadOnlyProperty<S> extends ConfigProperty.ReadOnlyConfigProperty<ExchangeConfigType, ExchangeConfig, S> implements ExchangeProperty<S> {
+        public ExchangeReadOnlyProperty(String name) {
             super(name);
             EXCHANGE_PROPERTIES.add(this);
         }
     }
 
-    public static final ExchangeReadOnlyProperty<VirtualHostConfig> VIRTUAL_HOST_PROPERTY = new ExchangeReadOnlyProperty<VirtualHostConfig>("virtualHost")
-    {
-        public VirtualHostConfig getValue(ExchangeConfig object)
-        {
+    public static final ExchangeReadOnlyProperty<VirtualHostConfig> VIRTUAL_HOST_PROPERTY = new ExchangeReadOnlyProperty<VirtualHostConfig>("virtualHost") {
+        public VirtualHostConfig getValue(ExchangeConfig object) {
             return object.getVirtualHost();
         }
     };
 
-    public static final ExchangeReadOnlyProperty<String> NAME_PROPERTY = new ExchangeReadOnlyProperty<String>("name")
-    {
-        public String getValue(ExchangeConfig object)
-        {
+    public static final ExchangeReadOnlyProperty<String> NAME_PROPERTY = new ExchangeReadOnlyProperty<String>("name") {
+        public String getValue(ExchangeConfig object) {
             return object.getName();
         }
     };
 
-    public static final ExchangeReadOnlyProperty<Boolean> AUTODELETE_PROPERTY = new ExchangeReadOnlyProperty<Boolean>("autodelete")
-    {
-        public Boolean getValue(ExchangeConfig object)
-        {
+    public static final ExchangeReadOnlyProperty<Boolean> AUTODELETE_PROPERTY = new ExchangeReadOnlyProperty<Boolean>("autodelete") {
+        public Boolean getValue(ExchangeConfig object) {
             return object.isAutoDelete();
         }
     };
 
 
-    public static final ExchangeReadOnlyProperty<ExchangeConfig> ALTERNATE_EXCHANGE_PROPERTY = new ExchangeReadOnlyProperty<ExchangeConfig>("alternateExchange")
-    {
-        public ExchangeConfig getValue(ExchangeConfig object)
-        {
+    public static final ExchangeReadOnlyProperty<ExchangeConfig> ALTERNATE_EXCHANGE_PROPERTY = new ExchangeReadOnlyProperty<ExchangeConfig>("alternateExchange") {
+        public ExchangeConfig getValue(ExchangeConfig object) {
             return object.getAlternateExchange();
         }
     };
 
-    public static final ExchangeReadOnlyProperty<Map<String,Object>> ARGUMENTS = new ExchangeReadOnlyProperty<Map<String,Object>>("arguments")
-    {
-        public Map<String,Object> getValue(ExchangeConfig object)
-        {
+    public static final ExchangeReadOnlyProperty<Map<String, Object>> ARGUMENTS = new ExchangeReadOnlyProperty<Map<String, Object>>("arguments") {
+        public Map<String, Object> getValue(ExchangeConfig object) {
             return object.getArguments();
         }
     };
 
     private static final ExchangeConfigType INSTANCE = new ExchangeConfigType();
 
-    private ExchangeConfigType()
-    {
+    private ExchangeConfigType() {
     }
 
-    public Collection<ExchangeProperty<?>> getProperties()
-    {
+    public Collection<ExchangeProperty<?>> getProperties() {
         return Collections.unmodifiableList(EXCHANGE_PROPERTIES);
     }
 
-    public static ExchangeConfigType getInstance()
-    {
+    public static ExchangeConfigType getInstance() {
         return INSTANCE;
     }
-
 
 
 }

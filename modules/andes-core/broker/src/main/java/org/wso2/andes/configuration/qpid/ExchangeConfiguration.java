@@ -20,36 +20,30 @@ package org.wso2.andes.configuration.qpid;
 import org.apache.commons.configuration.Configuration;
 
 
-public class ExchangeConfiguration
-{
+public class ExchangeConfiguration {
 
     private Configuration _config;
     private String _name;
 
-    public ExchangeConfiguration(String exchName, Configuration subset)
-    {
+    public ExchangeConfiguration(String exchName, Configuration subset) {
         _name = exchName;
         _config = subset;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return _name;
     }
 
-    public String getType()
-    {
-        return _config.getString("type","direct");
+    public String getType() {
+        return _config.getString("type", "direct");
     }
 
-    public boolean getDurable()
-    {
+    public boolean getDurable() {
         return _config.getBoolean("durable", false);
     }
 
-    public boolean getAutoDelete()
-    {
-        return _config.getBoolean("autodelete",false);
+    public boolean getAutoDelete() {
+        return _config.getBoolean("autodelete", false);
     }
 
 }

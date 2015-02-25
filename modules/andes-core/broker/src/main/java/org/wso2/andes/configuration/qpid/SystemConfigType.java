@@ -20,106 +20,81 @@ package org.wso2.andes.configuration.qpid;
 
 import java.util.*;
 
-public final class SystemConfigType extends ConfigObjectType<SystemConfigType, SystemConfig>
-{
+public final class SystemConfigType extends ConfigObjectType<SystemConfigType, SystemConfig> {
     private static final List<SystemProperty<?>> SYSTEM_PROPERTIES = new ArrayList<SystemProperty<?>>();
 
-    public static interface SystemProperty<S> extends ConfigProperty<SystemConfigType, SystemConfig, S>
-    {
+    public static interface SystemProperty<S> extends ConfigProperty<SystemConfigType, SystemConfig, S> {
     }
 
-    private abstract static class SystemReadWriteProperty<S>  extends ConfigProperty.ReadWriteConfigProperty<SystemConfigType, SystemConfig, S> implements SystemProperty<S>
-    {
-        public SystemReadWriteProperty(String name)
-        {
+    private abstract static class SystemReadWriteProperty<S> extends ConfigProperty.ReadWriteConfigProperty<SystemConfigType, SystemConfig, S> implements SystemProperty<S> {
+        public SystemReadWriteProperty(String name) {
             super(name);
             SYSTEM_PROPERTIES.add(this);
         }
     }
 
-    private abstract static class SystemReadOnlyProperty<S> extends ConfigProperty.ReadOnlyConfigProperty<SystemConfigType, SystemConfig, S> implements SystemProperty<S>
-    {
-        public SystemReadOnlyProperty(String name)
-        {
+    private abstract static class SystemReadOnlyProperty<S> extends ConfigProperty.ReadOnlyConfigProperty<SystemConfigType, SystemConfig, S> implements SystemProperty<S> {
+        public SystemReadOnlyProperty(String name) {
             super(name);
             SYSTEM_PROPERTIES.add(this);
         }
     }
 
-    public static final SystemReadOnlyProperty<String> NAME_PROPERTY = new SystemReadOnlyProperty<String>("name")
-    {
-        public String getValue(SystemConfig object)
-        {
+    public static final SystemReadOnlyProperty<String> NAME_PROPERTY = new SystemReadOnlyProperty<String>("name") {
+        public String getValue(SystemConfig object) {
             return object.getName();
         }
     };
 
-    public static final SystemReadOnlyProperty<UUID> ID_PROPERTY = new SystemReadOnlyProperty<UUID>("id")
-    {
-        public UUID getValue(SystemConfig object)
-        {
+    public static final SystemReadOnlyProperty<UUID> ID_PROPERTY = new SystemReadOnlyProperty<UUID>("id") {
+        public UUID getValue(SystemConfig object) {
             return object.getId();
         }
     };
 
-    public static final SystemReadOnlyProperty<String> OS_NAME_PROPERTY = new SystemReadOnlyProperty<String>("osName")
-    {
-        public String getValue(SystemConfig object)
-        {
+    public static final SystemReadOnlyProperty<String> OS_NAME_PROPERTY = new SystemReadOnlyProperty<String>("osName") {
+        public String getValue(SystemConfig object) {
             return object.getOperatingSystemName();
         }
     };
 
-    public static final SystemReadOnlyProperty<String> NODE_NAME_PROPERTY = new SystemReadOnlyProperty<String>("nodeName")
-    {
-        public String getValue(SystemConfig object)
-        {
+    public static final SystemReadOnlyProperty<String> NODE_NAME_PROPERTY = new SystemReadOnlyProperty<String>("nodeName") {
+        public String getValue(SystemConfig object) {
             return object.getNodeName();
         }
     };
 
-    public static final SystemReadOnlyProperty<String> RELEASE_PROPERTY = new SystemReadOnlyProperty<String>("release")
-    {
-        public String getValue(SystemConfig object)
-        {
+    public static final SystemReadOnlyProperty<String> RELEASE_PROPERTY = new SystemReadOnlyProperty<String>("release") {
+        public String getValue(SystemConfig object) {
             return object.getOSRelease();
         }
     };
 
-    public static final SystemReadOnlyProperty<String> VERSION_PROPERTY = new SystemReadOnlyProperty<String>("version")
-    {
-        public String getValue(SystemConfig object)
-        {
+    public static final SystemReadOnlyProperty<String> VERSION_PROPERTY = new SystemReadOnlyProperty<String>("version") {
+        public String getValue(SystemConfig object) {
             return object.getOSVersion();
         }
     };
 
-    public static final SystemReadOnlyProperty<String> MACHINE_PROPERTY = new SystemReadOnlyProperty<String>("machine")
-    {
-        public String getValue(SystemConfig object)
-        {
+    public static final SystemReadOnlyProperty<String> MACHINE_PROPERTY = new SystemReadOnlyProperty<String>("machine") {
+        public String getValue(SystemConfig object) {
             return object.getOSArchitecture();
         }
     };
 
     private static final SystemConfigType INSTANCE = new SystemConfigType();
 
-    private SystemConfigType()
-    {
+    private SystemConfigType() {
     }
 
-    public Collection<SystemProperty<?>> getProperties()
-    {
+    public Collection<SystemProperty<?>> getProperties() {
         return Collections.unmodifiableList(SYSTEM_PROPERTIES);
     }
 
 
-
-    public static SystemConfigType getInstance()
-    {
+    public static SystemConfigType getInstance() {
         return INSTANCE;
     }
-
 
 
 }

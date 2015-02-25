@@ -23,8 +23,7 @@ import org.wso2.andes.AMQException;
 import java.util.Map;
 
 
-public interface QueueConfig extends ConfiguredObject<QueueConfigType, QueueConfig>
-{
+public interface QueueConfig extends ConfiguredObject<QueueConfigType, QueueConfig> {
     VirtualHostConfig getVirtualHost();
 
     String getName();
@@ -44,11 +43,11 @@ public interface QueueConfig extends ConfiguredObject<QueueConfigType, QueueConf
     long getQueueDepth();
 
     int getConsumerCount();
-    
+
     int getConsumerCountHigh();
 
     int getBindingCount();
-    
+
     int getBindingCountHigh();
 
     ConfigStore getConfigStore();
@@ -58,13 +57,13 @@ public interface QueueConfig extends ConfiguredObject<QueueConfigType, QueueConf
     long getTotalEnqueueSize();
 
     long getTotalDequeueSize();
-    
+
     long getByteTxnEnqueues();
 
     long getByteTxnDequeues();
 
     long getMsgTxnEnqueues();
-    
+
     long getMsgTxnDequeues();
 
     long getPersistentByteEnqueues();
@@ -74,9 +73,9 @@ public interface QueueConfig extends ConfiguredObject<QueueConfigType, QueueConf
     long getPersistentMsgEnqueues();
 
     long getPersistentMsgDequeues();
-    
+
     long getUnackedMessageCount();
-    
+
     long getUnackedMessageCountHigh();
 
     void purge(long request) throws AMQException;

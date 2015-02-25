@@ -19,18 +19,16 @@ package org.wso2.andes.configuration.qpid;
 
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.wso2.andes.exchange.ExchangeDefaults;
 import org.wso2.andes.configuration.qpid.plugins.ConfigurationPlugin;
+import org.wso2.andes.exchange.ExchangeDefaults;
 
 import java.util.List;
 
-public class QueueConfiguration extends ConfigurationPlugin
-{
+public class QueueConfiguration extends ConfigurationPlugin {
     private String _name;
     private VirtualHostConfiguration _vHostConfig;
 
-    public QueueConfiguration(String name, VirtualHostConfiguration virtualHostConfiguration) throws ConfigurationException
-    {
+    public QueueConfiguration(String name, VirtualHostConfiguration virtualHostConfiguration) throws ConfigurationException {
         _vHostConfig = virtualHostConfiguration;
         _name = name;
 
@@ -41,153 +39,126 @@ public class QueueConfiguration extends ConfigurationPlugin
         setConfiguration("virtualhosts.virtualhost.queues.queue", mungedConf);
     }
 
-    public String[] getElementsProcessed()
-    {
+    public String[] getElementsProcessed() {
         return new String[]{"maximumMessageSize",
-                            "maximumQueueDepth",
-                            "maximumMessageCount",
-                            "maximumMessageAge",
-                            "minimumAlertRepeatGap",
-                            "durable",
-                            "exchange",
-                            "exclusive",
-                            "queue",
-                            "autodelete",
-                            "priority",
-                            "priorities",
-                            "routingKey",
-                            "capacity",
-                            "flowResumeCapacity",
-                            "lvq",
-                            "lvqKey"
+                "maximumQueueDepth",
+                "maximumMessageCount",
+                "maximumMessageAge",
+                "minimumAlertRepeatGap",
+                "durable",
+                "exchange",
+                "exclusive",
+                "queue",
+                "autodelete",
+                "priority",
+                "priorities",
+                "routingKey",
+                "capacity",
+                "flowResumeCapacity",
+                "lvq",
+                "lvqKey"
         };
     }
 
     @Override
-    public void validateConfiguration() throws ConfigurationException
-    {
+    public void validateConfiguration() throws ConfigurationException {
         //Currently doesn't do validation
     }
 
-    public VirtualHostConfiguration getVirtualHostConfiguration()
-    {
+    public VirtualHostConfiguration getVirtualHostConfiguration() {
         return _vHostConfig;
     }
 
-    public boolean getDurable()
-    {
+    public boolean getDurable() {
         return getBooleanValue("durable");
     }
-    
-    public boolean getExclusive()
-    {
+
+    public boolean getExclusive() {
         return getBooleanValue("exclusive");
     }
 
-    public boolean getAutoDelete()
-    {
+    public boolean getAutoDelete() {
         return getBooleanValue("autodelete");
     }
 
-    public String getOwner()
-    {
+    public String getOwner() {
         return getStringValue("owner", null);
     }
 
-    public boolean getPriority()
-    {
+    public boolean getPriority() {
         return getBooleanValue("priority");
     }
 
-    public int getPriorities()
-    {
+    public int getPriorities() {
         return getIntValue("priorities", -1);
     }
 
-    public String getExchange()
-    {
+    public String getExchange() {
         return getStringValue("exchange", ExchangeDefaults.DEFAULT_EXCHANGE_NAME.asString());
     }
 
-    public List getRoutingKeys()
-    {
+    public List getRoutingKeys() {
         return getListValue("routingKey");
     }
 
-    public String getName()
-    {
+    public String getName() {
         return _name;
     }
 
-    public int getMaximumMessageAge()
-    {
+    public int getMaximumMessageAge() {
         return getIntValue("maximumMessageAge", _vHostConfig.getMaximumMessageAge());
     }
 
-    public long getMaximumQueueDepth()
-    {
+    public long getMaximumQueueDepth() {
         return getLongValue("maximumQueueDepth", _vHostConfig.getMaximumQueueDepth());
     }
 
-    public long getMaximumMessageSize()
-    {
+    public long getMaximumMessageSize() {
         return getLongValue("maximumMessageSize", _vHostConfig.getMaximumMessageSize());
     }
 
-    public long getMaximumMessageCount()
-    {
+    public long getMaximumMessageCount() {
         return getLongValue("maximumMessageCount", _vHostConfig.getMaximumMessageCount());
     }
 
-    public long getMinimumAlertRepeatGap()
-    {
+    public long getMinimumAlertRepeatGap() {
         return getLongValue("minimumAlertRepeatGap", _vHostConfig.getMinimumAlertRepeatGap());
     }
 
-    public long getCapacity()
-    {
+    public long getCapacity() {
         return getLongValue("capacity", _vHostConfig.getCapacity());
     }
 
-    public long getFlowResumeCapacity()
-    {
+    public long getFlowResumeCapacity() {
         return getLongValue("flowResumeCapacity", _vHostConfig.getFlowResumeCapacity());
     }
 
-    public boolean isLVQ()
-    {
+    public boolean isLVQ() {
         return getBooleanValue("lvq");
     }
 
-    public String getLVQKey()
-    {
+    public String getLVQKey() {
         return getStringValue("lvqKey", null);
     }
 
 
-    public static class QueueConfig extends ConfigurationPlugin
-    {
+    public static class QueueConfig extends ConfigurationPlugin {
         @Override
-        public String[] getElementsProcessed()
-        {
+        public String[] getElementsProcessed() {
             return new String[]{"name"};
         }
 
-        public String getName()
-        {
+        public String getName() {
             return getStringValue("name");
         }
 
 
-        public void validateConfiguration() throws ConfigurationException
-        {
-            if (_configuration.isEmpty())
-            {
+        public void validateConfiguration() throws ConfigurationException {
+            if (_configuration.isEmpty()) {
                 throw new ConfigurationException("Queue section cannot be empty.");
             }
 
-            if (getName() == null)
-            {
+            if (getName() == null) {
                 throw new ConfigurationException("Queue section must have a 'name' element.");
             }
 
@@ -195,11 +166,10 @@ public class QueueConfiguration extends ConfigurationPlugin
 
 
         @Override
-        public String formatToString()
-        {
-            return "Name:"+getName();
+        public String formatToString() {
+            return "Name:" + getName();
         }
-          
+
 
     }
 }

@@ -24,7 +24,6 @@ import org.apache.log4j.Logger;
 import org.wso2.andes.configuration.AndesConfigurationManager;
 import org.wso2.andes.configuration.enums.AndesConfiguration;
 import org.wso2.andes.configuration.qpid.plugins.ConfigurationPlugin;
-import org.wso2.andes.kernel.AndesException;
 import org.wso2.andes.server.registry.ApplicationRegistry;
 import org.wso2.andes.server.virtualhost.VirtualHost;
 import org.wso2.andes.server.virtualhost.VirtualHostRegistry;
@@ -34,8 +33,6 @@ import sun.misc.SignalHandler;
 import java.io.File;
 import java.util.*;
 import java.util.Map.Entry;
-
-import static org.wso2.andes.transport.ConnectionSettings.WILDCARD_ADDRESS;
 
 public class ServerConfiguration extends ConfigurationPlugin implements SignalHandler {
     protected static final Logger _logger = Logger.getLogger(ServerConfiguration.class);
@@ -111,7 +108,6 @@ public class ServerConfiguration extends ConfigurationPlugin implements SignalHa
      *
      * @param configurationURL
      * @throws org.apache.commons.configuration.ConfigurationException
-     *
      */
     public ServerConfiguration(File configurationURL) throws ConfigurationException {
         this(parseConfig(configurationURL));

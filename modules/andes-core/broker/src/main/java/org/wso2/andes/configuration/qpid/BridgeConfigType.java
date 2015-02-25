@@ -18,126 +18,99 @@
 
 package org.wso2.andes.configuration.qpid;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-public final class BridgeConfigType extends ConfigObjectType<BridgeConfigType, BridgeConfig>
-{
+public final class BridgeConfigType extends ConfigObjectType<BridgeConfigType, BridgeConfig> {
     private static final List<BridgeProperty<?>> BRIDGE_PROPERTIES = new ArrayList<BridgeProperty<?>>();
 
-    public static interface BridgeProperty<S> extends ConfigProperty<BridgeConfigType, BridgeConfig, S>
-    {
+    public static interface BridgeProperty<S> extends ConfigProperty<BridgeConfigType, BridgeConfig, S> {
     }
 
-    private abstract static class BridgeReadWriteProperty<S>  extends ConfigProperty.ReadWriteConfigProperty<BridgeConfigType, BridgeConfig, S> implements BridgeProperty<S>
-    {
-        public BridgeReadWriteProperty(String name)
-        {
+    private abstract static class BridgeReadWriteProperty<S> extends ConfigProperty.ReadWriteConfigProperty<BridgeConfigType, BridgeConfig, S> implements BridgeProperty<S> {
+        public BridgeReadWriteProperty(String name) {
             super(name);
             BRIDGE_PROPERTIES.add(this);
         }
     }
 
-    private abstract static class BridgeReadOnlyProperty<S> extends ConfigProperty.ReadOnlyConfigProperty<BridgeConfigType, BridgeConfig, S> implements BridgeProperty<S>
-    {
-        public BridgeReadOnlyProperty(String name)
-        {
+    private abstract static class BridgeReadOnlyProperty<S> extends ConfigProperty.ReadOnlyConfigProperty<BridgeConfigType, BridgeConfig, S> implements BridgeProperty<S> {
+        public BridgeReadOnlyProperty(String name) {
             super(name);
             BRIDGE_PROPERTIES.add(this);
         }
     }
 
-    public static final BridgeReadOnlyProperty<LinkConfig> LINK_PROPERTY = new BridgeReadOnlyProperty<LinkConfig>("link")
-    {
-        public LinkConfig getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<LinkConfig> LINK_PROPERTY = new BridgeReadOnlyProperty<LinkConfig>("link") {
+        public LinkConfig getValue(BridgeConfig object) {
             return object.getLink();
         }
     };
 
-    public static final BridgeReadOnlyProperty<Integer> CHANNEL_ID_PROPERTY = new BridgeReadOnlyProperty<Integer>("channelId")
-    {
-        public Integer getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<Integer> CHANNEL_ID_PROPERTY = new BridgeReadOnlyProperty<Integer>("channelId") {
+        public Integer getValue(BridgeConfig object) {
             return object.getChannelId();
         }
     };
 
-    public static final BridgeReadOnlyProperty<Boolean> DURABLE_PROPERTY = new BridgeReadOnlyProperty<Boolean>("durable")
-    {
-        public Boolean getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<Boolean> DURABLE_PROPERTY = new BridgeReadOnlyProperty<Boolean>("durable") {
+        public Boolean getValue(BridgeConfig object) {
             return object.isDurable();
         }
     };
 
-    public static final BridgeReadOnlyProperty<String> SOURCE_PROPERTY = new BridgeReadOnlyProperty<String>("source")
-    {
-        public String getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<String> SOURCE_PROPERTY = new BridgeReadOnlyProperty<String>("source") {
+        public String getValue(BridgeConfig object) {
             return object.getSource();
         }
     };
 
-    public static final BridgeReadOnlyProperty<String> DESTINATION_PROPERTY = new BridgeReadOnlyProperty<String>("destination")
-    {
-        public String getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<String> DESTINATION_PROPERTY = new BridgeReadOnlyProperty<String>("destination") {
+        public String getValue(BridgeConfig object) {
             return object.getDestination();
         }
     };
 
-    public static final BridgeReadOnlyProperty<String> KEY_PROPERTY = new BridgeReadOnlyProperty<String>("key")
-    {
-        public String getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<String> KEY_PROPERTY = new BridgeReadOnlyProperty<String>("key") {
+        public String getValue(BridgeConfig object) {
             return object.getKey();
         }
     };
 
-    public static final BridgeReadOnlyProperty<Boolean> QUEUE_BRIDGE_PROPERTY = new BridgeReadOnlyProperty<Boolean>("queueBridge")
-    {
-        public Boolean getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<Boolean> QUEUE_BRIDGE_PROPERTY = new BridgeReadOnlyProperty<Boolean>("queueBridge") {
+        public Boolean getValue(BridgeConfig object) {
             return object.isQueueBridge();
         }
     };
 
-    public static final BridgeReadOnlyProperty<Boolean> LOCAL_SOURCE_PROPERTY = new BridgeReadOnlyProperty<Boolean>("localSource")
-    {
-        public Boolean getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<Boolean> LOCAL_SOURCE_PROPERTY = new BridgeReadOnlyProperty<Boolean>("localSource") {
+        public Boolean getValue(BridgeConfig object) {
             return object.isLocalSource();
         }
     };
 
-    public static final BridgeReadOnlyProperty<String> TAG_PROPERTY = new BridgeReadOnlyProperty<String>("tag")
-    {
-        public String getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<String> TAG_PROPERTY = new BridgeReadOnlyProperty<String>("tag") {
+        public String getValue(BridgeConfig object) {
             return object.getTag();
         }
     };
 
-    public static final BridgeReadOnlyProperty<String> EXCLUDES_PROPERTY = new BridgeReadOnlyProperty<String>("excludes")
-    {
-        public String getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<String> EXCLUDES_PROPERTY = new BridgeReadOnlyProperty<String>("excludes") {
+        public String getValue(BridgeConfig object) {
             return object.getExcludes();
         }
     };
 
-    public static final BridgeReadOnlyProperty<Boolean> DYNAMIC_PROPERTY = new BridgeReadOnlyProperty<Boolean>("dynamic")
-    {
-        public Boolean getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<Boolean> DYNAMIC_PROPERTY = new BridgeReadOnlyProperty<Boolean>("dynamic") {
+        public Boolean getValue(BridgeConfig object) {
             return object.isDynamic();
         }
     };
 
-    public static final BridgeReadOnlyProperty<Integer> ACK_BATCHING_PROPERTY = new BridgeReadOnlyProperty<Integer>("ackBatching")
-    {
-        public Integer getValue(BridgeConfig object)
-        {
+    public static final BridgeReadOnlyProperty<Integer> ACK_BATCHING_PROPERTY = new BridgeReadOnlyProperty<Integer>("ackBatching") {
+        public Integer getValue(BridgeConfig object) {
             return object.getAckBatching();
         }
     };
@@ -145,20 +118,16 @@ public final class BridgeConfigType extends ConfigObjectType<BridgeConfigType, B
 
     private static final BridgeConfigType INSTANCE = new BridgeConfigType();
 
-    private BridgeConfigType()
-    {
+    private BridgeConfigType() {
     }
 
-    public Collection<BridgeProperty<?>> getProperties()
-    {
+    public Collection<BridgeProperty<?>> getProperties() {
         return Collections.unmodifiableList(BRIDGE_PROPERTIES);
     }
 
-    public static BridgeConfigType getInstance()
-    {
+    public static BridgeConfigType getInstance() {
         return INSTANCE;
     }
-
 
 
 }

@@ -20,8 +20,7 @@ package org.wso2.andes.configuration.qpid;
 
 import java.util.Collection;
 
-public abstract class ConfigObjectType<T extends ConfigObjectType<T,C>, C extends ConfiguredObject<T,C>>
-{
+public abstract class ConfigObjectType<T extends ConfigObjectType<T, C>, C extends ConfiguredObject<T, C>> {
     public abstract Collection<? extends ConfigProperty<T, C, ?>> getProperties();
 
 }

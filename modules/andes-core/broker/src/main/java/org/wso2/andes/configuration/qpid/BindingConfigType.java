@@ -20,88 +20,68 @@ package org.wso2.andes.configuration.qpid;
 
 import java.util.*;
 
-public final class BindingConfigType extends ConfigObjectType<BindingConfigType, BindingConfig>
-{
+public final class BindingConfigType extends ConfigObjectType<BindingConfigType, BindingConfig> {
     private static final List<BindingProperty<?>> BINDING_PROPERTIES = new ArrayList<BindingProperty<?>>();
 
-    public static interface BindingProperty<S> extends ConfigProperty<BindingConfigType, BindingConfig, S>
-    {
+    public static interface BindingProperty<S> extends ConfigProperty<BindingConfigType, BindingConfig, S> {
     }
 
-    private abstract static class BindingReadWriteProperty<S>  extends ConfigProperty.ReadWriteConfigProperty<BindingConfigType, BindingConfig, S> implements BindingProperty<S>
-    {
-        public BindingReadWriteProperty(String name)
-        {
+    private abstract static class BindingReadWriteProperty<S> extends ConfigProperty.ReadWriteConfigProperty<BindingConfigType, BindingConfig, S> implements BindingProperty<S> {
+        public BindingReadWriteProperty(String name) {
             super(name);
             BINDING_PROPERTIES.add(this);
         }
     }
 
-    private abstract static class BindingReadOnlyProperty<S> extends ConfigProperty.ReadOnlyConfigProperty<BindingConfigType, BindingConfig, S> implements BindingProperty<S>
-    {
-        public BindingReadOnlyProperty(String name)
-        {
+    private abstract static class BindingReadOnlyProperty<S> extends ConfigProperty.ReadOnlyConfigProperty<BindingConfigType, BindingConfig, S> implements BindingProperty<S> {
+        public BindingReadOnlyProperty(String name) {
             super(name);
             BINDING_PROPERTIES.add(this);
         }
     }
 
-    public static final BindingReadOnlyProperty<ExchangeConfig> EXCHANGE_PROPERTY = new BindingReadOnlyProperty<ExchangeConfig>("exchange")
-    {
-        public ExchangeConfig getValue(BindingConfig object)
-        {
+    public static final BindingReadOnlyProperty<ExchangeConfig> EXCHANGE_PROPERTY = new BindingReadOnlyProperty<ExchangeConfig>("exchange") {
+        public ExchangeConfig getValue(BindingConfig object) {
             return object.getExchange();
         }
     };
 
-    public static final BindingReadOnlyProperty<QueueConfig> QUEUE_PROPERTY = new BindingReadOnlyProperty<QueueConfig>("queue")
-    {
-        public QueueConfig getValue(BindingConfig object)
-        {
+    public static final BindingReadOnlyProperty<QueueConfig> QUEUE_PROPERTY = new BindingReadOnlyProperty<QueueConfig>("queue") {
+        public QueueConfig getValue(BindingConfig object) {
             return object.getQueue();
         }
     };
 
-    public static final BindingReadOnlyProperty<String> BINDING_KEY_PROPERTY = new BindingReadOnlyProperty<String>("bindingKey")
-    {
-        public String getValue(BindingConfig object)
-        {
+    public static final BindingReadOnlyProperty<String> BINDING_KEY_PROPERTY = new BindingReadOnlyProperty<String>("bindingKey") {
+        public String getValue(BindingConfig object) {
             return object.getBindingKey();
         }
     };
 
-    public static final BindingReadOnlyProperty<Map<String,Object>> ARGUMENTS = new BindingReadOnlyProperty<Map<String,Object>>("arguments")
-    {
-        public Map<String,Object> getValue(BindingConfig object)
-        {
+    public static final BindingReadOnlyProperty<Map<String, Object>> ARGUMENTS = new BindingReadOnlyProperty<Map<String, Object>>("arguments") {
+        public Map<String, Object> getValue(BindingConfig object) {
             return object.getArguments();
         }
     };
 
-    public static final BindingReadOnlyProperty<String> ORIGIN_PROPERTY = new BindingReadOnlyProperty<String>("origin")
-    {
-        public String getValue(BindingConfig object)
-        {
+    public static final BindingReadOnlyProperty<String> ORIGIN_PROPERTY = new BindingReadOnlyProperty<String>("origin") {
+        public String getValue(BindingConfig object) {
             return object.getOrigin();
         }
     };
 
     private static final BindingConfigType INSTANCE = new BindingConfigType();
 
-    private BindingConfigType()
-    {
+    private BindingConfigType() {
     }
 
-    public Collection<BindingProperty<?>> getProperties()
-    {
+    public Collection<BindingProperty<?>> getProperties() {
         return Collections.unmodifiableList(BINDING_PROPERTIES);
     }
 
-   public static BindingConfigType getInstance()
-    {
+    public static BindingConfigType getInstance() {
         return INSTANCE;
     }
-
 
 
 }

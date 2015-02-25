@@ -18,8 +18,7 @@
 
 package org.wso2.andes.configuration.qpid;
 
-public interface BridgeConfig extends ConfiguredObject<BridgeConfigType, BridgeConfig>
-{
+public interface BridgeConfig extends ConfiguredObject<BridgeConfigType, BridgeConfig> {
 
     boolean isDynamic();
 

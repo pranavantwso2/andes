@@ -20,7 +20,6 @@ package org.wso2.andes.configuration.qpid;
 import org.wso2.andes.configuration.qpid.plugins.ConfigurationPlugin;
 import org.wso2.andes.server.queue.AMQQueue;
 
-public interface ExchangeConfigurationPlugin
-{
+public interface ExchangeConfigurationPlugin {
     ConfigurationPlugin getConfiguration(AMQQueue queue);
 }

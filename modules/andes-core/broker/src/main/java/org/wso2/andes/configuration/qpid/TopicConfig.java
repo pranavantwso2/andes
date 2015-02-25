@@ -21,55 +21,45 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.wso2.andes.configuration.qpid.plugins.ConfigurationPlugin;
 
-public class TopicConfig extends ConfigurationPlugin
-{
-    public TopicConfig()
-    {
+public class TopicConfig extends ConfigurationPlugin {
+    public TopicConfig() {
         _configuration = new PropertiesConfiguration();
     }
 
     @Override
-    public String[] getElementsProcessed()
-    {
+    public String[] getElementsProcessed() {
         return new String[]{"name", "subscriptionName"};
     }
 
-    public String getName()
-    {
+    public String getName() {
         // If we don't have a specific topic then this config is for all topics.
         return getStringValue("name", "#");
     }
 
-    public String getSubscriptionName()
-    {
+    public String getSubscriptionName() {
         return getStringValue("subscriptionName");
     }
 
-    public void validateConfiguration() throws ConfigurationException
-    {
-        if (_configuration.isEmpty())
-        {
+    public void validateConfiguration() throws ConfigurationException {
+        if (_configuration.isEmpty()) {
             throw new ConfigurationException("Topic section cannot be empty.");
         }
 
-        if (getStringValue("name") == null && getSubscriptionName() == null)
-        {
+        if (getStringValue("name") == null && getSubscriptionName() == null) {
             throw new ConfigurationException("Topic section must have a 'name' or 'subscriptionName' element.");
         }
 
-        System.err.println("********* Created TC:"+this);
+        System.err.println("********* Created TC:" + this);
     }
 
 
     @Override
-    public String formatToString()
-    {
-        String response = "Topic:"+getName();
-        if (getSubscriptionName() != null)
-        {
-               response += ", SubscriptionName:"+getSubscriptionName();
+    public String formatToString() {
+        String response = "Topic:" + getName();
+        if (getSubscriptionName() != null) {
+            response += ", SubscriptionName:" + getSubscriptionName();
         }
 
         return response;
-    }    
+    }
 }

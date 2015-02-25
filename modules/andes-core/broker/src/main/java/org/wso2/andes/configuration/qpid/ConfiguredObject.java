@@ -20,13 +20,12 @@ package org.wso2.andes.configuration.qpid;
 
 import java.util.UUID;
 
-public interface ConfiguredObject<T extends ConfigObjectType<T,C>, C extends ConfiguredObject<T, C>>
-{
+public interface ConfiguredObject<T extends ConfigObjectType<T, C>, C extends ConfiguredObject<T, C>> {
     public UUID getId();
 
     public T getConfigType();
 
-    public ConfiguredObject<T,C> getParent();
+    public ConfiguredObject<T, C> getParent();
 
     public boolean isDurable();
 

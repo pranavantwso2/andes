@@ -19,55 +19,46 @@ package org.wso2.andes.configuration.qpid;
 
 import org.wso2.andes.transport.NetworkTransportConfiguration;
 
-public class ServerNetworkTransportConfiguration implements NetworkTransportConfiguration
-{
+public class ServerNetworkTransportConfiguration implements NetworkTransportConfiguration {
     private final ServerConfiguration _serverConfig;
     private final int _port;
     private final String _host;
     private final String _transport;
 
-    public ServerNetworkTransportConfiguration(final ServerConfiguration serverConfig, 
+    public ServerNetworkTransportConfiguration(final ServerConfiguration serverConfig,
                                                final int port, final String host,
-                                               final String transport)
-    {
+                                               final String transport) {
         _serverConfig = serverConfig;
         _port = port;
         _host = host;
         _transport = transport;
     }
 
-    public Boolean getTcpNoDelay()
-    {
+    public Boolean getTcpNoDelay() {
         return _serverConfig.getTcpNoDelay();
     }
 
-    public Integer getSendBufferSize()
-    {
+    public Integer getSendBufferSize() {
         return _serverConfig.getWriteBufferSize();
     }
 
-    public Integer getReceiveBufferSize()
-    {
+    public Integer getReceiveBufferSize() {
         return _serverConfig.getReceiveBufferSize();
     }
 
-    public Integer getPort()
-    {
+    public Integer getPort() {
         return _port;
     }
 
-    public String getHost()
-    {
+    public String getHost() {
         return _host;
     }
 
-    public String getTransport()
-    {
+    public String getTransport() {
         return _transport;
     }
 
-    public Integer getConnectorProcessors()
-    {
+    public Integer getConnectorProcessors() {
         return _serverConfig.getConnectorProcessors();
     }
 }

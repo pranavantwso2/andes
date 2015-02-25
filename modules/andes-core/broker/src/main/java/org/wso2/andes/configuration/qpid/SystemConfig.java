@@ -18,8 +18,7 @@
 
 package org.wso2.andes.configuration.qpid;
 
-public interface SystemConfig extends ConfiguredObject<SystemConfigType,SystemConfig>
-{
+public interface SystemConfig extends ConfiguredObject<SystemConfigType, SystemConfig> {
     String getName();
 
     String getOperatingSystemName();

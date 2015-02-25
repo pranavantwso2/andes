@@ -18,8 +18,7 @@
 
 package org.wso2.andes.configuration.qpid;
 
-public interface ConnectionConfig extends ConfiguredObject<ConnectionConfigType, ConnectionConfig>
-{
+public interface ConnectionConfig extends ConfiguredObject<ConnectionConfigType, ConnectionConfig> {
     VirtualHostConfig getVirtualHost();
 
     String getAddress();
@@ -39,8 +38,8 @@ public interface ConnectionConfig extends ConfiguredObject<ConnectionConfigType,
     Integer getRemoteParentPID();
 
     ConfigStore getConfigStore();
-    
+
     Boolean isShadow();
-    
+
     void mgmtClose();
 }

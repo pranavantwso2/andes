@@ -17,27 +17,23 @@
  */
 package org.wso2.andes.configuration.qpid.management;
 
-import javax.management.NotCompliantMBeanException;
-
 import org.wso2.andes.management.common.mbeans.ConfigurationManagement;
 import org.wso2.andes.server.management.AMQManagedObject;
 import org.wso2.andes.server.registry.ApplicationRegistry;
 
-public class ConfigurationManagementMBean extends AMQManagedObject implements ConfigurationManagement
-{
+import javax.management.NotCompliantMBeanException;
 
-    public ConfigurationManagementMBean() throws NotCompliantMBeanException
-    {
+public class ConfigurationManagementMBean extends AMQManagedObject implements ConfigurationManagement {
+
+    public ConfigurationManagementMBean() throws NotCompliantMBeanException {
         super(ConfigurationManagement.class, ConfigurationManagement.TYPE);
     }
 
-    public String getObjectInstanceName()
-    {
+    public String getObjectInstanceName() {
         return ConfigurationManagement.TYPE;
     }
 
-    public void reloadSecurityConfiguration() throws Exception
-    {
+    public void reloadSecurityConfiguration() throws Exception {
         ApplicationRegistry.getInstance().getConfiguration().reparseConfigFileSecuritySections();
     }
 

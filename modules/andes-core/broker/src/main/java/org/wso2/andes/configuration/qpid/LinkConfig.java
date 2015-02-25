@@ -19,8 +19,7 @@
 package org.wso2.andes.configuration.qpid;
 
 
-public interface LinkConfig extends ConfiguredObject<LinkConfigType, LinkConfig>
-{
+public interface LinkConfig extends ConfiguredObject<LinkConfigType, LinkConfig> {
     VirtualHostConfig getVirtualHost();
 
 

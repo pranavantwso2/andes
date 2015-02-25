@@ -17,34 +17,30 @@
  */
 package org.wso2.andes.configuration.qpid;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.wso2.andes.configuration.qpid.plugins.ConfigurationPlugin;
 import org.wso2.andes.configuration.qpid.plugins.ConfigurationPluginFactory;
 import org.wso2.andes.server.registry.ApplicationRegistry;
 
-public class ConfigurationManager
-{
-    public List<ConfigurationPlugin> getConfigurationPlugins(String configurationElement, Configuration configuration) throws ConfigurationException
-    {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+public class ConfigurationManager {
+    public List<ConfigurationPlugin> getConfigurationPlugins(String configurationElement, Configuration configuration) throws ConfigurationException {
         List<ConfigurationPlugin> plugins = new ArrayList<ConfigurationPlugin>();
         Map<List<String>, ConfigurationPluginFactory> factories =
-            ApplicationRegistry.getInstance().getPluginManager().getConfigurationPlugins();
+                ApplicationRegistry.getInstance().getPluginManager().getConfigurationPlugins();
 
-        for (Entry<List<String>, ConfigurationPluginFactory> entry : factories.entrySet())
-        {
-            if (entry.getKey().contains(configurationElement))
-            {
+        for (Entry<List<String>, ConfigurationPluginFactory> entry : factories.entrySet()) {
+            if (entry.getKey().contains(configurationElement)) {
                 ConfigurationPluginFactory factory = entry.getValue();
                 plugins.add(factory.newInstance(configurationElement, configuration));
             }
         }
-        
+
         return plugins;
     }
 }

@@ -17,24 +17,19 @@
  */
 package org.wso2.andes.configuration.qpid;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.wso2.andes.configuration.qpid.plugins.ConfigurationPlugin;
 import org.wso2.andes.exchange.ExchangeDefaults;
 import org.wso2.andes.framing.AMQShortString;
 import org.wso2.andes.server.binding.Binding;
-import org.wso2.andes.configuration.qpid.plugins.ConfigurationPlugin;
 import org.wso2.andes.server.queue.AMQQueue;
 import org.wso2.andes.server.registry.ApplicationRegistry;
 import org.wso2.andes.server.store.MemoryMessageStore;
+
+import java.util.*;
 
 public class VirtualHostConfiguration extends ConfigurationPlugin {
     private String _name;
@@ -51,10 +46,8 @@ public class VirtualHostConfiguration extends ConfigurationPlugin {
     /**
      * Apply the given configuration to this VirtualHostConfiguration
      *
-     * @param config
-     *         the config to apply
-     * @throws ConfigurationException
-     *         if a problem occurs with configuration
+     * @param config the config to apply
+     * @throws ConfigurationException if a problem occurs with configuration
      */
     public void setConfiguration(Configuration config) throws ConfigurationException {
         setConfiguration("virtualhosts.virtualhost", config);
@@ -83,8 +76,8 @@ public class VirtualHostConfiguration extends ConfigurationPlugin {
 
     public long getHousekeepingExpiredMessageCheckPeriod() {
         return getLongValue("housekeeping.expiredMessageCheckPeriod",
-                            ApplicationRegistry.getInstance().getConfiguration()
-                                               .getHousekeepingCheckPeriod());
+                ApplicationRegistry.getInstance().getConfiguration()
+                        .getHousekeepingCheckPeriod());
     }
 
     public String getAuthenticationDatabase() {
@@ -151,7 +144,7 @@ public class VirtualHostConfiguration extends ConfigurationPlugin {
         for (int index = 0; index < bindings.size(); index++) {
             // Ignore the DEFAULT Exchange binding
             if (bindings.get(index).getExchange().getNameShortString()
-                        .equals(ExchangeDefaults.DEFAULT_EXCHANGE_NAME)) {
+                    .equals(ExchangeDefaults.DEFAULT_EXCHANGE_NAME)) {
                 bindings.remove(index);
             } else {
                 exchangeClasses.add(bindings.get(index).getExchange().getType().getName());
@@ -180,12 +173,12 @@ public class VirtualHostConfiguration extends ConfigurationPlugin {
         // Build the expected class name. <Exchangename>sConfiguration
         // i.e. TopicConfiguration or HeadersConfiguration
         String exchangeClass = "org.wso2.andes.configuration.qpid."
-                               + exchangeName.substring(0, 1).toUpperCase()
-                               + exchangeName.substring(1) + "Configuration";
+                + exchangeName.substring(0, 1).toUpperCase()
+                + exchangeName.substring(1) + "Configuration";
 
         ExchangeConfigurationPlugin exchangeConfiguration
                 = (ExchangeConfigurationPlugin) queue.getVirtualHost().getConfiguration()
-                                                     .getConfiguration(exchangeClass);
+                .getConfiguration(exchangeClass);
 
         // now need to perform the queue-topic-topics-queues magic.
         // So make a new ConfigurationObject that will hold all the configuration for this queue.
@@ -270,8 +263,8 @@ public class VirtualHostConfiguration extends ConfigurationPlugin {
         // supported.
         if (getListValue("security.authentication.name").size() > 0) {
             String message = "Validation error : security/authentication/name is no longer a " +
-                             "supported element within the configuration xml."
-                             + " It appears in virtual host definition : " + _name;
+                    "supported element within the configuration xml."
+                    + " It appears in virtual host definition : " + _name;
             throw new ConfigurationException(message);
         }
     }
