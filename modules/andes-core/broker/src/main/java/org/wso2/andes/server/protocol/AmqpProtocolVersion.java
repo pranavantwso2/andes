@@ -17,4 +17,4 @@
  */
 package org.wso2.andes.server.protocol;
 
-public enum AmqpProtocolVersion { v0_8, v0_9, v0_9_1, v0_10 }
+public enum AmqpProtocolVersion { v0_8, v0_9, v0_9_1, v0_10, v1_00 }
