@@ -20,7 +20,9 @@ package org.wso2.andes.server.protocol;
 import org.wso2.andes.AMQConnectionException;
 import org.wso2.andes.AMQException;
 import org.wso2.andes.common.ClientProperties;
-import org.wso2.andes.framing.*;
+import org.wso2.andes.framing.AMQDataBlock;
+import org.wso2.andes.framing.AMQShortString;
+import org.wso2.andes.framing.FieldTable;
 import org.wso2.andes.protocol.AMQVersionAwareProtocolSession;
 import org.wso2.andes.server.AMQChannel;
 import org.wso2.andes.server.logging.LogActor;
@@ -33,8 +35,7 @@ import javax.security.sasl.SaslServer;
 import java.util.List;
 
 
-public interface AMQProtocolSession extends AMQVersionAwareProtocolSession, AuthorizationHolder, AMQConnectionModel
-{
+public interface AMQProtocolSession extends AMQVersionAwareProtocolSession, AuthorizationHolder, AMQConnectionModel {
     long getSessionID();
 
     LogActor getLogActor();
@@ -45,30 +46,25 @@ public interface AMQProtocolSession extends AMQVersionAwareProtocolSession, Auth
 
     boolean isClosing();
 
-    public static final class ProtocolSessionIdentifier
-    {
+    public static final class ProtocolSessionIdentifier {
         private final Object _sessionIdentifier;
         private final Object _sessionInstance;
 
-        ProtocolSessionIdentifier(AMQProtocolSession session)
-        {
+        ProtocolSessionIdentifier(AMQProtocolSession session) {
             _sessionIdentifier = session.getClientIdentifier();
             _sessionInstance = session.getClientProperties() == null ? null : session.getClientProperties().getObject(ClientProperties.instance.toAMQShortString());
         }
 
-        public Object getSessionIdentifier()
-        {
+        public Object getSessionIdentifier() {
             return _sessionIdentifier;
         }
 
-        public Object getSessionInstance()
-        {
+        public Object getSessionInstance() {
             return _sessionInstance;
         }
     }
 
-    public static interface Task
-    {
+    public static interface Task {
         public void doTask(AMQProtocolSession session) throws AMQException;
     }
 
@@ -76,7 +72,6 @@ public interface AMQProtocolSession extends AMQVersionAwareProtocolSession, Auth
      * Called when a protocol data block is received
      *
      * @param message the data block that has been received
-     *
      * @throws Exception if processing the datablock fails
      */
     void dataBlockReceived(AMQDataBlock message) throws Exception;
@@ -102,7 +97,6 @@ public interface AMQProtocolSession extends AMQVersionAwareProtocolSession, Auth
      * per session).
      *
      * @param channelId the channel id which must be valid
-     *
      * @return null if no channel exists, the channel otherwise
      */
     AMQChannel getChannel(int channelId);
@@ -120,9 +114,8 @@ public interface AMQProtocolSession extends AMQVersionAwareProtocolSession, Auth
      * subscriptions (this may in turn remove queues if they are auto delete</li> </ul>
      *
      * @param channelId id of the channel to close
-     *
      * @throws org.wso2.andes.AMQException if an error occurs closing the channel
-     * @throws IllegalArgumentException     if the channel id is not valid
+     * @throws IllegalArgumentException    if the channel id is not valid
      */
     void closeChannel(int channelId) throws AMQException;
 
@@ -156,14 +149,20 @@ public interface AMQProtocolSession extends AMQVersionAwareProtocolSession, Auth
      */
     void initHeartbeats(int delay);
 
-    /** This must be called when the session is _closed in order to free up any resources managed by the session. */
+    /**
+     * This must be called when the session is _closed in order to free up any resources managed by the session.
+     */
     void closeSession() throws AMQException;
 
-    /** This must be called to close the session in order to free up any resources managed by the session. */
+    /**
+     * This must be called to close the session in order to free up any resources managed by the session.
+     */
     void closeConnection(int channelId, AMQConnectionException e, boolean closeProtocolSession) throws AMQException;
 
 
-    /** @return a key that uniquely identifies this session */
+    /**
+     * @return a key that uniquely identifies this session
+     */
     Object getKey();
 
     /**
@@ -174,7 +173,9 @@ public interface AMQProtocolSession extends AMQVersionAwareProtocolSession, Auth
      */
     String getLocalFQDN();
 
-    /** @return the sasl server that can perform authentication for this session. */
+    /**
+     * @return the sasl server that can perform authentication for this session.
+     */
     SaslServer getSaslServer();
 
     /**

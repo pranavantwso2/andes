@@ -17,25 +17,20 @@
  */
 package org.wso2.andes.server.protocol;
 
-import org.wso2.andes.configuration.qpid.ConfigStore;
-import org.wso2.andes.configuration.qpid.ConfiguredObject;
-import org.wso2.andes.configuration.qpid.ConnectionConfig;
-import org.wso2.andes.configuration.qpid.ConnectionConfigType;
-import org.wso2.andes.configuration.qpid.VirtualHostConfig;
+import org.wso2.andes.configuration.qpid.*;
 import org.wso2.andes.protocol.ProtocolEngine;
-import org.wso2.andes.transport.network.InputHandler;
-import org.wso2.andes.transport.network.Assembler;
-import org.wso2.andes.transport.network.Disassembler;
-import org.wso2.andes.transport.network.NetworkConnection;
-import org.wso2.andes.server.transport.ServerConnection;
 import org.wso2.andes.server.logging.messages.ConnectionMessages;
 import org.wso2.andes.server.registry.IApplicationRegistry;
+import org.wso2.andes.server.transport.ServerConnection;
+import org.wso2.andes.transport.network.Assembler;
+import org.wso2.andes.transport.network.Disassembler;
+import org.wso2.andes.transport.network.InputHandler;
+import org.wso2.andes.transport.network.NetworkConnection;
 
 import java.net.SocketAddress;
 import java.util.UUID;
 
-public class ProtocolEngine_0_10  extends InputHandler implements ProtocolEngine, ConnectionConfig
-{
+public class ProtocolEngine_0_10 extends InputHandler implements ProtocolEngine, ConnectionConfig {
     public static final int MAX_FRAME_SIZE = 64 * 1024 - 1;
 
     private NetworkConnection _network;
@@ -48,8 +43,7 @@ public class ProtocolEngine_0_10  extends InputHandler implements ProtocolEngine
 
     public ProtocolEngine_0_10(ServerConnection conn,
                                NetworkConnection network,
-                               final IApplicationRegistry appRegistry)
-    {
+                               final IApplicationRegistry appRegistry) {
         super(new Assembler(conn));
         _connection = conn;
         _connection.setConnectionConfig(this);
@@ -58,10 +52,8 @@ public class ProtocolEngine_0_10  extends InputHandler implements ProtocolEngine
         _appRegistry = appRegistry;
 
         _connection.setSender(new Disassembler(_network.getSender(), MAX_FRAME_SIZE));
-        _connection.onOpen(new Runnable()
-        {
-            public void run()
-            {
+        _connection.onOpen(new Runnable() {
+            public void run() {
                 getConfigStore().addConfiguredObject(ProtocolEngine_0_10.this);
             }
         });
@@ -71,125 +63,101 @@ public class ProtocolEngine_0_10  extends InputHandler implements ProtocolEngine
         _connection.getLogActor().message(ConnectionMessages.OPEN(null, "0-10", false, true));
     }
 
-    public SocketAddress getRemoteAddress()
-    {
+    public SocketAddress getRemoteAddress() {
         return _network.getRemoteAddress();
     }
 
-    public SocketAddress getLocalAddress()
-    {
+    public SocketAddress getLocalAddress() {
         return _network.getLocalAddress();
     }
 
-    public long getReadBytes()
-    {
+    public long getReadBytes() {
         return _readBytes;
     }
 
-    public long getWrittenBytes()
-    {
+    public long getWrittenBytes() {
         return _writtenBytes;
     }
 
-    public void writerIdle()
-    {
+    public void writerIdle() {
         //Todo
     }
 
-    public void readerIdle()
-    {
+    public void readerIdle() {
         //Todo
     }
 
-    public VirtualHostConfig getVirtualHost()
-    {
+    public VirtualHostConfig getVirtualHost() {
         return _connection.getVirtualHost();
     }
 
-    public String getAddress()
-    {
+    public String getAddress() {
         return getRemoteAddress().toString();
     }
 
-    public Boolean isIncoming()
-    {
+    public Boolean isIncoming() {
         return true;
     }
 
-    public Boolean isSystemConnection()
-    {
+    public Boolean isSystemConnection() {
         return false;
     }
 
-    public Boolean isFederationLink()
-    {
+    public Boolean isFederationLink() {
         return false;
     }
 
-    public String getAuthId()
-    {
+    public String getAuthId() {
         return _connection.getAuthorizedPrincipal() == null ? null : _connection.getAuthorizedPrincipal().getName();
     }
 
-    public String getRemoteProcessName()
-    {
+    public String getRemoteProcessName() {
         return null;
     }
 
-    public Integer getRemotePID()
-    {
+    public Integer getRemotePID() {
         return null;
     }
 
-    public Integer getRemoteParentPID()
-    {
+    public Integer getRemoteParentPID() {
         return null;
     }
 
-    public ConfigStore getConfigStore()
-    {
+    public ConfigStore getConfigStore() {
         return _appRegistry.getConfigStore();
     }
 
-    public UUID getId()
-    {
+    public UUID getId() {
         return _id;
     }
 
-    public ConnectionConfigType getConfigType()
-    {
+    public ConnectionConfigType getConfigType() {
         return ConnectionConfigType.getInstance();
     }
 
-    public ConfiguredObject getParent()
-    {
+    public ConfiguredObject getParent() {
         return getVirtualHost();
     }
 
-    public boolean isDurable()
-    {
+    public boolean isDurable() {
         return false;
     }
 
     @Override
-    public void closed()
-    {
+    public void closed() {
         super.closed();
         getConfigStore().removeConfiguredObject(this);
     }
 
-    public long getCreateTime()
-    {
+    public long getCreateTime() {
         return _createTime;
     }
 
-    public Boolean isShadow()
-    {
+    public Boolean isShadow() {
         return false;
     }
-    
-    public void mgmtClose()
-    {
+
+    public void mgmtClose() {
         _connection.mgmtClose();
     }
 }

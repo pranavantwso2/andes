@@ -23,21 +23,18 @@ import org.wso2.andes.protocol.AMQMethodEvent;
 
 /**
  * AMQNoMethodHandlerException represents the case where no method handler exists to handle an AQMP method.
- *
+ * <p/>
  * <p/><table id="crc"><caption>CRC Card</caption>
  * <tr><th> Responsibilities <th> Collaborations
  * <tr><td> Represents failure to handle an AMQP method.
  * </table>
  *
  * @todo Not an AMQP exception as no status code.
- *
  * @todo Missing method handler. Unlikely to ever happen, and if it does its a coding error. Consider replacing with a
- *       Runtime.
+ * Runtime.
  */
-public class AMQNoMethodHandlerException extends AMQException
-{
-    public AMQNoMethodHandlerException(AMQMethodEvent<AMQMethodBody> evt)
-    {
+public class AMQNoMethodHandlerException extends AMQException {
+    public AMQNoMethodHandlerException(AMQMethodEvent<AMQMethodBody> evt) {
         super("AMQMethodEvent " + evt + " was not processed by any listener on Broker.");
     }
 }
