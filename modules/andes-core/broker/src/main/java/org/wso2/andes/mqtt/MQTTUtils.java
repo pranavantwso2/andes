@@ -19,6 +19,7 @@ package org.wso2.andes.mqtt;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.dna.mqtt.moquette.messaging.spi.impl.subscriptions.SubscriptionsStore;
 import org.dna.mqtt.moquette.proto.messages.AbstractMessage;
 import org.wso2.andes.kernel.*;
 
@@ -107,6 +108,8 @@ public class MQTTUtils {
      */
     public static AndesMessageMetadata convertToAndesHeader(long messageID, String topic, int qosLevel,
                                                             int messageContentLength, boolean retain, UUID publisherID) {
+        long receivedTime = System.currentTimeMillis();
+
         AndesMessageMetadata messageHeader = new AndesMessageMetadata();
         messageHeader.setMessageID(messageID);
         messageHeader.setTopic(true);
@@ -115,6 +118,8 @@ public class MQTTUtils {
         messageHeader.setChannelId(publisherID);
         messageHeader.setMessageContentLength(messageContentLength);
         messageHeader.setStorageQueueName(topic);
+        // message arrival time set to mb node's system time.
+        messageHeader.setArrivalTime(receivedTime);
         if (log.isDebugEnabled()) {
             log.debug("Message with id " + messageID + " having the topic " + topic + " with QOS" + qosLevel
                     + " and retain flag set to " + retain + " was created");
@@ -178,5 +183,18 @@ public class MQTTUtils {
      */
     public static int convertMQTTProtocolTypeToInteger(AbstractMessage.QOSType qos) {
         return qos.getValue();
+    }
+
+    /**
+     * Check if a subscribed queue bound destination routing key matches with a given message routing key using MQTT
+     * wildcards.
+     *
+     * @param queueBoundRoutingKey The subscribed destination with/without wildcards
+     * @param messageRoutingKey    The message destination routing key without wildcards
+     * @return Is queue bound routing key match the message routing key
+     */
+    public static boolean isTargetQueueBoundByMatchingToRoutingKey(String queueBoundRoutingKey,
+                                                                   String messageRoutingKey) {
+        return SubscriptionsStore.matchTopics(messageRoutingKey, queueBoundRoutingKey);
     }
 }

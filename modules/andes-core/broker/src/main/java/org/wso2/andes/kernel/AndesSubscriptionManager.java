@@ -89,8 +89,13 @@ public class AndesSubscriptionManager {
         subscriptionStore.createDisconnectOrRemoveLocalSubscription(localSubscription, SubscriptionListener.SubscriptionChange.ADDED);
 
         //start a slot delivery worker on the destination (or topicQueue) subscription refers
+        //destination would be target queue if it is durable topic, otherwise it is queue or non durable topic
         SlotDeliveryWorkerManager slotDeliveryWorkerManager = SlotDeliveryWorkerManager.getInstance();
-        slotDeliveryWorkerManager.startSlotDeliveryWorker(localSubscription.getStorageQueueName(), localSubscription.getSubscribedDestination());
+        if(localSubscription.isBoundToTopic() && localSubscription.isDurable()){
+            slotDeliveryWorkerManager.startSlotDeliveryWorker(localSubscription.getStorageQueueName(), localSubscription.getTargetQueue());
+        } else {
+            slotDeliveryWorkerManager.startSlotDeliveryWorker(localSubscription.getStorageQueueName(), localSubscription.getSubscribedDestination());
+        }
 
         //notify the local subscription change to listeners
         notifyLocalSubscriptionHasChanged(localSubscription, SubscriptionListener.SubscriptionChange.ADDED);
@@ -168,28 +173,6 @@ public class AndesSubscriptionManager {
         }
 
         return subscriptionExists;
-    }
-
-    /**
-     * check if any local active non durable subscription exists
-     *
-     * @param isTopic if topic subscriptions are queried
-     * @return if any subscription exists
-     */
-    public boolean checkIfActiveLocalNonDurableSubscriptionsExists(boolean isTopic) {
-        List<LocalSubscription> activeSubscriptions = subscriptionStore.getActiveNonDurableLocalSubscribers(isTopic);
-        return !activeSubscriptions.isEmpty();
-    }
-
-    /**
-     * check if any cluster active subscription exists
-     *
-     * @param isTopic if topic subscriptions are queried
-     * @return if any subscription exists
-     */
-    public boolean checkIfActiveClusterSubscriptionsExists(boolean isTopic) {
-        List<AndesSubscription> activeSubscriptions = subscriptionStore.getActiveClusterSubscribersForNode(ClusterResourceHolder.getInstance().getClusterManager().getMyNodeID(), isTopic);
-        return !activeSubscriptions.isEmpty();
     }
 
     /**
