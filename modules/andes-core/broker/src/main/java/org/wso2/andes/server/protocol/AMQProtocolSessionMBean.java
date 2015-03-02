@@ -19,26 +19,6 @@
 
 package org.wso2.andes.server.protocol;
 
-import java.util.Date;
-import java.util.List;
-
-import javax.management.JMException;
-import javax.management.MBeanException;
-import javax.management.MBeanNotificationInfo;
-import javax.management.NotCompliantMBeanException;
-import javax.management.Notification;
-import javax.management.ObjectName;
-import javax.management.monitor.MonitorNotification;
-import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.CompositeDataSupport;
-import javax.management.openmbean.CompositeType;
-import javax.management.openmbean.OpenDataException;
-import javax.management.openmbean.OpenType;
-import javax.management.openmbean.SimpleType;
-import javax.management.openmbean.TabularData;
-import javax.management.openmbean.TabularDataSupport;
-import javax.management.openmbean.TabularType;
-
 import org.wso2.andes.AMQException;
 import org.wso2.andes.framing.AMQShortString;
 import org.wso2.andes.framing.ConnectionCloseBody;
@@ -53,28 +33,32 @@ import org.wso2.andes.server.logging.actors.ManagementActor;
 import org.wso2.andes.server.management.AMQManagedObject;
 import org.wso2.andes.server.management.ManagedObject;
 
+import javax.management.*;
+import javax.management.monitor.MonitorNotification;
+import javax.management.openmbean.*;
+import java.util.Date;
+import java.util.List;
+
 /**
  * This MBean class implements the management interface. In order to make more attributes, operations and notifications
  * available over JMX simply augment the ManagedConnection interface and add the appropriate implementation here.
  */
 @MBeanDescription("Management Bean for an AMQ Broker Connection")
-public class AMQProtocolSessionMBean extends AMQManagedObject implements ManagedConnection
-{
+public class AMQProtocolSessionMBean extends AMQManagedObject implements ManagedConnection {
     private AMQProtocolSession _protocolSession = null;
     private String _name = null;
 
     // openmbean data types for representing the channel attributes
 
     private static final OpenType[] _channelAttributeTypes =
-        { SimpleType.INTEGER, SimpleType.BOOLEAN, SimpleType.STRING, SimpleType.INTEGER, SimpleType.BOOLEAN };
+            {SimpleType.INTEGER, SimpleType.BOOLEAN, SimpleType.STRING, SimpleType.INTEGER, SimpleType.BOOLEAN};
     private static CompositeType _channelType = null; // represents the data type for channel data
     private static TabularType _channelsType = null; // Data type for list of channels type
     private static final AMQShortString BROKER_MANAGEMENT_CONSOLE_HAS_CLOSED_THE_CONNECTION =
-        new AMQShortString("Broker Management Console has closed the connection.");
+            new AMQShortString("Broker Management Console has closed the connection.");
 
     @MBeanConstructor("Creates an MBean exposing an AMQ Broker Connection")
-    public AMQProtocolSessionMBean(AMQProtocolSession amqProtocolSession) throws NotCompliantMBeanException, OpenDataException
-    {
+    public AMQProtocolSessionMBean(AMQProtocolSession amqProtocolSession) throws NotCompliantMBeanException, OpenDataException {
         super(ManagedConnection.class, ManagedConnection.TYPE);
         _protocolSession = amqProtocolSession;
         String remote = getRemoteAddress();
@@ -82,14 +66,10 @@ public class AMQProtocolSessionMBean extends AMQManagedObject implements Managed
         init();
     }
 
-    static
-    {
-        try
-        {
+    static {
+        try {
             init();
-        }
-        catch (JMException ex)
-        {
+        } catch (JMException ex) {
             // This is not expected to ever occur.
             throw new RuntimeException("Got JMException in static initializer.", ex);
         }
@@ -98,66 +78,54 @@ public class AMQProtocolSessionMBean extends AMQManagedObject implements Managed
     /**
      * initialises the openmbean data types
      */
-    private static void init() throws OpenDataException
-    {
+    private static void init() throws OpenDataException {
         _channelType =
-            new CompositeType("Channel", "Channel Details", COMPOSITE_ITEM_NAMES_DESC.toArray(new String[COMPOSITE_ITEM_NAMES_DESC.size()]),
-                    COMPOSITE_ITEM_NAMES_DESC.toArray(new String[COMPOSITE_ITEM_NAMES_DESC.size()]), _channelAttributeTypes);
+                new CompositeType("Channel", "Channel Details", COMPOSITE_ITEM_NAMES_DESC.toArray(new String[COMPOSITE_ITEM_NAMES_DESC.size()]),
+                        COMPOSITE_ITEM_NAMES_DESC.toArray(new String[COMPOSITE_ITEM_NAMES_DESC.size()]), _channelAttributeTypes);
         _channelsType = new TabularType("Channels", "Channels", _channelType, TABULAR_UNIQUE_INDEX.toArray(new String[TABULAR_UNIQUE_INDEX.size()]));
     }
 
-    public String getClientId()
-    {
+    public String getClientId() {
         return String.valueOf(_protocolSession.getContextKey());
     }
 
-    public String getAuthorizedId()
-    {
-        return (_protocolSession.getAuthorizedPrincipal() != null ) ? _protocolSession.getAuthorizedPrincipal().getName() : null;
+    public String getAuthorizedId() {
+        return (_protocolSession.getAuthorizedPrincipal() != null) ? _protocolSession.getAuthorizedPrincipal().getName() : null;
     }
 
-    public String getVersion()
-    {
+    public String getVersion() {
         return (_protocolSession.getClientVersion() == null) ? null : _protocolSession.getClientVersion().toString();
     }
 
-    public Date getLastIoTime()
-    {
+    public Date getLastIoTime() {
         return new Date(_protocolSession.getLastIoTime());
     }
 
-    public String getRemoteAddress()
-    {
+    public String getRemoteAddress() {
         return _protocolSession.getRemoteAddress().toString();
     }
 
-    public ManagedObject getParentObject()
-    {
+    public ManagedObject getParentObject() {
         return _protocolSession.getVirtualHost().getManagedObject();
     }
 
-    public Long getWrittenBytes()
-    {
+    public Long getWrittenBytes() {
         return _protocolSession.getWrittenBytes();
     }
 
-    public Long getReadBytes()
-    {
+    public Long getReadBytes() {
         return _protocolSession.getWrittenBytes();
     }
 
-    public Long getMaximumNumberOfChannels()
-    {
+    public Long getMaximumNumberOfChannels() {
         return _protocolSession.getMaximumNumberOfChannels();
     }
 
-    public void setMaximumNumberOfChannels(Long value)
-    {
+    public void setMaximumNumberOfChannels(Long value) {
         _protocolSession.setMaximumNumberOfChannels(value);
     }
 
-    public String getObjectInstanceName()
-    {
+    public String getObjectInstanceName() {
         return ObjectName.quote(_name);
     }
 
@@ -167,25 +135,18 @@ public class AMQProtocolSessionMBean extends AMQManagedObject implements Managed
      * @param channelId
      * @throws JMException if channel with given id doesn't exist or if commit fails
      */
-    public void commitTransactions(int channelId) throws JMException
-    {
+    public void commitTransactions(int channelId) throws JMException {
         CurrentActor.set(new ManagementActor(_logActor.getRootMessageLogger()));
-        try
-        {
+        try {
             AMQChannel channel = _protocolSession.getChannel(channelId);
-            if (channel == null)
-            {
+            if (channel == null) {
                 throw new JMException("The channel (channel Id = " + channelId + ") does not exist");
             }
 
             _protocolSession.commitTransactions(channel);
-        }
-        catch (AMQException ex)
-        {
+        } catch (AMQException ex) {
             throw new MBeanException(ex, ex.toString());
-        }
-        finally
-        {
+        } finally {
             CurrentActor.remove();
         }
     }
@@ -196,25 +157,18 @@ public class AMQProtocolSessionMBean extends AMQManagedObject implements Managed
      * @param channelId
      * @throws JMException if channel with given id doesn't exist or if rollback fails
      */
-    public void rollbackTransactions(int channelId) throws JMException
-    {
+    public void rollbackTransactions(int channelId) throws JMException {
         CurrentActor.set(new ManagementActor(_logActor.getRootMessageLogger()));
-        try
-        {
+        try {
             AMQChannel channel = _protocolSession.getChannel(channelId);
-            if (channel == null)
-            {
+            if (channel == null) {
                 throw new JMException("The channel (channel Id = " + channelId + ") does not exist");
             }
 
             _protocolSession.rollbackTransactions(channel);
-        }
-        catch (AMQException ex)
-        {
+        } catch (AMQException ex) {
             throw new MBeanException(ex, ex.toString());
-        }
-        finally
-        {
+        } finally {
             CurrentActor.remove();
         }
     }
@@ -225,21 +179,19 @@ public class AMQProtocolSessionMBean extends AMQManagedObject implements Managed
      * @return list of channels in tabular form.
      * @throws OpenDataException
      */
-    public TabularData channels() throws OpenDataException
-    {
+    public TabularData channels() throws OpenDataException {
         TabularDataSupport channelsList = new TabularDataSupport(_channelsType);
         List<AMQChannel> list = _protocolSession.getChannels();
 
-        for (AMQChannel channel : list)
-        {
+        for (AMQChannel channel : list) {
             Object[] itemValues =
-                {
-                    channel.getChannelId(), channel.isTransactional(),
-                    (channel.getDefaultQueue() != null) ? channel.getDefaultQueue().getNameShortString().asString() : null,
-                    channel.getUnacknowledgedMessageMap().size(), channel.getBlocking()
-                };
+                    {
+                            channel.getChannelId(), channel.isTransactional(),
+                            (channel.getDefaultQueue() != null) ? channel.getDefaultQueue().getNameShortString().asString() : null,
+                            channel.getUnacknowledgedMessageMap().size(), channel.getBlocking()
+                    };
 
-            CompositeData channelData = new CompositeDataSupport(_channelType, 
+            CompositeData channelData = new CompositeDataSupport(_channelType,
                     COMPOSITE_ITEM_NAMES_DESC.toArray(new String[COMPOSITE_ITEM_NAMES_DESC.size()]), itemValues);
             channelsList.put(channelData);
         }
@@ -250,19 +202,19 @@ public class AMQProtocolSessionMBean extends AMQManagedObject implements Managed
     /**
      * closes the connection. The administrator can use this management operation to close connection to free up
      * resources.
+     *
      * @throws JMException
      */
-    public void closeConnection() throws JMException
-    {
+    public void closeConnection() throws JMException {
 
         MethodRegistry methodRegistry = _protocolSession.getMethodRegistry();
         ConnectionCloseBody responseBody =
                 methodRegistry.createConnectionCloseBody(AMQConstant.REPLY_SUCCESS.getCode(),
-                                                         // replyCode
-                                                         BROKER_MANAGEMENT_CONSOLE_HAS_CLOSED_THE_CONNECTION,
-                                                         // replyText,
-                                                         0,
-                                                         0);
+                        // replyCode
+                        BROKER_MANAGEMENT_CONSOLE_HAS_CLOSED_THE_CONNECTION,
+                        // replyText,
+                        0,
+                        0);
 
         // This seems ugly but because we use closeConnection in both normal
         // broker operation and as part of the management interface it cannot
@@ -274,126 +226,101 @@ public class AMQProtocolSessionMBean extends AMQManagedObject implements Managed
         // Ideally we would not have a single method that can be called from
         // two contexts.
         boolean removeActor = false;
-        if (CurrentActor.get() == null)
-        {
+        if (CurrentActor.get() == null) {
             removeActor = true;
             CurrentActor.set(new ManagementActor(_logActor.getRootMessageLogger()));
         }
 
-        try
-        {
+        try {
             _protocolSession.writeFrame(responseBody.generateFrame(0));
 
-            try
-            {
+            try {
 
                 _protocolSession.closeSession();
-            }
-            catch (AMQException ex)
-            {
+            } catch (AMQException ex) {
                 throw new MBeanException(ex, ex.toString());
             }
-        }
-        finally
-        {
-            if (removeActor)
-            {
+        } finally {
+            if (removeActor) {
                 CurrentActor.remove();
             }
         }
     }
 
     @Override
-    public MBeanNotificationInfo[] getNotificationInfo()
-    {
-        String[] notificationTypes = new String[] { MonitorNotification.THRESHOLD_VALUE_EXCEEDED };
+    public MBeanNotificationInfo[] getNotificationInfo() {
+        String[] notificationTypes = new String[]{MonitorNotification.THRESHOLD_VALUE_EXCEEDED};
         String name = MonitorNotification.class.getName();
         String description = "Channel count has reached threshold value";
         MBeanNotificationInfo info1 = new MBeanNotificationInfo(notificationTypes, name, description);
 
-        return new MBeanNotificationInfo[] { info1 };
+        return new MBeanNotificationInfo[]{info1};
     }
 
-    public void notifyClients(String notificationMsg)
-    {
+    public void notifyClients(String notificationMsg) {
         Notification n =
-            new Notification(MonitorNotification.THRESHOLD_VALUE_EXCEEDED, this, ++_notificationSequenceNumber,
-                System.currentTimeMillis(), notificationMsg);
+                new Notification(MonitorNotification.THRESHOLD_VALUE_EXCEEDED, this, ++_notificationSequenceNumber,
+                        System.currentTimeMillis(), notificationMsg);
         _broadcaster.sendNotification(n);
     }
 
-    public void resetStatistics() throws Exception
-    {
+    public void resetStatistics() throws Exception {
         _protocolSession.resetStatistics();
     }
 
-    public double getPeakMessageDeliveryRate()
-    {
+    public double getPeakMessageDeliveryRate() {
         return _protocolSession.getMessageDeliveryStatistics().getPeak();
     }
 
-    public double getPeakDataDeliveryRate()
-    {
+    public double getPeakDataDeliveryRate() {
         return _protocolSession.getDataDeliveryStatistics().getPeak();
     }
 
-    public double getMessageDeliveryRate()
-    {
+    public double getMessageDeliveryRate() {
         return _protocolSession.getMessageDeliveryStatistics().getRate();
     }
 
-    public double getDataDeliveryRate()
-    {
+    public double getDataDeliveryRate() {
         return _protocolSession.getDataDeliveryStatistics().getRate();
     }
 
-    public long getTotalMessagesDelivered()
-    {
+    public long getTotalMessagesDelivered() {
         return _protocolSession.getMessageDeliveryStatistics().getTotal();
     }
 
-    public long getTotalDataDelivered()
-    {
+    public long getTotalDataDelivered() {
         return _protocolSession.getDataDeliveryStatistics().getTotal();
     }
 
-    public double getPeakMessageReceiptRate()
-    {
+    public double getPeakMessageReceiptRate() {
         return _protocolSession.getMessageReceiptStatistics().getPeak();
     }
 
-    public double getPeakDataReceiptRate()
-    {
+    public double getPeakDataReceiptRate() {
         return _protocolSession.getDataReceiptStatistics().getPeak();
     }
 
-    public double getMessageReceiptRate()
-    {
+    public double getMessageReceiptRate() {
         return _protocolSession.getMessageReceiptStatistics().getRate();
     }
 
-    public double getDataReceiptRate()
-    {
+    public double getDataReceiptRate() {
         return _protocolSession.getDataReceiptStatistics().getRate();
     }
 
-    public long getTotalMessagesReceived()
-    {
+    public long getTotalMessagesReceived() {
         return _protocolSession.getMessageReceiptStatistics().getTotal();
     }
 
-    public long getTotalDataReceived()
-    {
+    public long getTotalDataReceived() {
         return _protocolSession.getDataReceiptStatistics().getTotal();
     }
 
-    public boolean isStatisticsEnabled()
-    {
+    public boolean isStatisticsEnabled() {
         return _protocolSession.isStatisticsEnabled();
     }
 
-    public void setStatisticsEnabled(boolean enabled)
-    {
+    public void setStatisticsEnabled(boolean enabled) {
         _protocolSession.setStatisticsEnabled(enabled);
     }
 }

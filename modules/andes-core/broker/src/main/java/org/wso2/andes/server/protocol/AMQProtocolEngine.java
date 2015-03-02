@@ -25,6 +25,10 @@ import org.wso2.andes.AMQSecurityException;
 import org.wso2.andes.codec.AMQCodecFactory;
 import org.wso2.andes.codec.AMQDecoder;
 import org.wso2.andes.common.ClientProperties;
+import org.wso2.andes.configuration.qpid.ConfigStore;
+import org.wso2.andes.configuration.qpid.ConfiguredObject;
+import org.wso2.andes.configuration.qpid.ConnectionConfig;
+import org.wso2.andes.configuration.qpid.ConnectionConfigType;
 import org.wso2.andes.framing.*;
 import org.wso2.andes.kernel.MessagingEngine;
 import org.wso2.andes.pool.Job;
@@ -35,10 +39,6 @@ import org.wso2.andes.protocol.AMQMethodListener;
 import org.wso2.andes.protocol.ProtocolEngine;
 import org.wso2.andes.server.AMQChannel;
 import org.wso2.andes.server.Broker;
-import org.wso2.andes.configuration.qpid.ConfigStore;
-import org.wso2.andes.configuration.qpid.ConfiguredObject;
-import org.wso2.andes.configuration.qpid.ConnectionConfig;
-import org.wso2.andes.configuration.qpid.ConnectionConfigType;
 import org.wso2.andes.server.handler.ServerMethodDispatcherImpl;
 import org.wso2.andes.server.logging.LogActor;
 import org.wso2.andes.server.logging.LogSubject;
@@ -70,19 +70,14 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocolSession, ConnectionConfig, FlowControlEventObserver
-{
+public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocolSession, ConnectionConfig, FlowControlEventObserver {
     private static final Logger _logger = Logger.getLogger(AMQProtocolEngine.class);
 
     private static final String CLIENT_PROPERTIES_INSTANCE = ClientProperties.instance.toString();
@@ -118,7 +113,7 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
     private Object _lastSent;
 
     protected volatile boolean _closed;
-    
+
     // maximum number of channels this session should have
     private long _maxNoOfChannels = ApplicationRegistry.getInstance().getConfiguration().getMaxChannelCount();
 
@@ -154,7 +149,7 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
     private final UUID _id;
     private final ConfigStore _configStore;
     private long _createTime = System.currentTimeMillis();
-    
+
     private ApplicationRegistry _registry;
     private boolean _statisticsEnabled = false;
     private StatisticsCounter _messagesDelivered, _dataDelivered, _messagesReceived, _dataReceived;
@@ -164,13 +159,11 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
 
     private AtomicBoolean isFlowControlled = new AtomicBoolean(false);
 
-    public ManagedObject getManagedObject()
-    {
+    public ManagedObject getManagedObject() {
         return _managedObject;
     }
 
-    public AMQProtocolEngine(VirtualHostRegistry virtualHostRegistry, NetworkConnection network)
-    {
+    public AMQProtocolEngine(VirtualHostRegistry virtualHostRegistry, NetworkConnection network) {
         _stateManager = new AMQStateManager(virtualHostRegistry, this);
         _codecFactory = new AMQCodecFactory(true, this);
         _poolReference.acquireExecutorService();
@@ -197,92 +190,71 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
         Broker.getEventDispatcher().addObserver(this);
     }
 
-    private AMQProtocolSessionMBean createMBean() throws JMException
-    {
+    private AMQProtocolSessionMBean createMBean() throws JMException {
         return new AMQProtocolSessionMBean(this);
     }
 
-    public long getSessionID()
-    {
+    public long getSessionID() {
         return _sessionID;
     }
 
-    public LogActor getLogActor()
-    {
+    public LogActor getLogActor() {
         return _actor;
     }
 
-    public void setMaxFrameSize(long frameMax)
-    {
+    public void setMaxFrameSize(long frameMax) {
         _maxFrameSize = frameMax;
     }
 
-    public long getMaxFrameSize()
-    {
+    public long getMaxFrameSize() {
         return _maxFrameSize;
     }
 
-    public boolean isClosing()
-    {
+    public boolean isClosing() {
         return _closing.get();
     }
 
-    public void received(final ByteBuffer msg)
-    {
-            _lastIoTime = System.currentTimeMillis();
-            try
-            {
-                final ArrayList<AMQDataBlock> dataBlocks = _codecFactory.getDecoder().decodeBuffer(msg);
-                Job.fireAsynchEvent(_poolReference.getPool(), _readJob, new Runnable() {
-                    public void run() {
-                        // Decode buffer
+    public void received(final ByteBuffer msg) {
+        _lastIoTime = System.currentTimeMillis();
+        try {
+            final ArrayList<AMQDataBlock> dataBlocks = _codecFactory.getDecoder().decodeBuffer(msg);
+            Job.fireAsynchEvent(_poolReference.getPool(), _readJob, new Runnable() {
+                public void run() {
+                    // Decode buffer
 
-                        for (AMQDataBlock dataBlock : dataBlocks)
-                        {
-                            try
-                            {
-                                dataBlockReceived(dataBlock);
-                            }
-                            catch (Exception e)
-                            {
-                                _logger.error("Unexpected exception when processing datablock", e);
-                                e.printStackTrace();
-                                closeProtocolSession();
-                            }
+                    for (AMQDataBlock dataBlock : dataBlocks) {
+                        try {
+                            dataBlockReceived(dataBlock);
+                        } catch (Exception e) {
+                            _logger.error("Unexpected exception when processing datablock", e);
+                            e.printStackTrace();
+                            closeProtocolSession();
                         }
-                        dataBlocks.clear();
                     }
-                });
-            }
-            catch (Exception e)
-            {
-                _logger.error("Unexpected exception when processing datablock", e);
-                closeProtocolSession();
-            }
+                    dataBlocks.clear();
+                }
+            });
+        } catch (Exception e) {
+            _logger.error("Unexpected exception when processing datablock", e);
+            closeProtocolSession();
+        }
     }
 
-    public void dataBlockReceived(AMQDataBlock message) throws Exception
-    {
+    public void dataBlockReceived(AMQDataBlock message) throws Exception {
         _lastReceived = message;
-        if (message instanceof ProtocolInitiation)
-        {
+        if (message instanceof ProtocolInitiation) {
             protocolInitiationReceived((ProtocolInitiation) message);
 
-        }
-        else if (message instanceof AMQFrame)
-        {
+        } else if (message instanceof AMQFrame) {
             AMQFrame frame = (AMQFrame) message;
             frameReceived(frame);
             frame = null;
-        }
-        else
-        {
+        } else {
             throw new AMQException("Unknown message type: " + message.getClass().getName() + ": " + message);
         }
     }
 
-    private void frameReceived(AMQFrame frame) throws AMQException
-    {
+    private void frameReceived(AMQFrame frame) throws AMQException {
         int channelId = frame.getChannel();
         AMQBody body = frame.getBodyFrame();
 
@@ -290,59 +262,44 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
         // If that is not available then we can use the ConnectionActor
         // that is associated with this AMQMPSession.
         LogActor channelActor = null;
-        if (_channelMap.get(channelId) != null)
-        {
+        if (_channelMap.get(channelId) != null) {
             channelActor = _channelMap.get(channelId).getLogActor();
         }
         CurrentActor.set(channelActor == null ? _actor : channelActor);
 
-        try
-        {
-            if (_logger.isDebugEnabled())
-            {
+        try {
+            if (_logger.isDebugEnabled()) {
                 _logger.debug("Frame Received: " + frame);
             }
 
             // Check that this channel is not closing
-            if (channelAwaitingClosure(channelId))
-            {
-                if ((frame.getBodyFrame() instanceof ChannelCloseOkBody))
-                {
-                    if (_logger.isInfoEnabled())
-                    {
+            if (channelAwaitingClosure(channelId)) {
+                if ((frame.getBodyFrame() instanceof ChannelCloseOkBody)) {
+                    if (_logger.isInfoEnabled()) {
                         _logger.info("Channel[" + channelId + "] awaiting closure - processing close-ok");
                     }
-                }
-                else
-                {
+                } else {
                     // The channel has been told to close, we don't process any more frames until
                     // it's closed.
                     return;
                 }
             }
 
-            try
-            {
+            try {
                 body.handle(channelId, this);
-            }
-            catch (AMQException e)
-            {
+            } catch (AMQException e) {
                 closeChannel(channelId);
                 throw e;
             }
-        }
-        finally
-        {
+        } finally {
             CurrentActor.remove();
         }
     }
 
-    private void protocolInitiationReceived(ProtocolInitiation pi)
-    {
+    private void protocolInitiationReceived(ProtocolInitiation pi) {
         // this ensures the codec never checks for a PI message again
         ((AMQDecoder) _codecFactory.getDecoder()).setExpectProtocolInitiation(false);
-        try
-        {
+        try {
             // Log incoming protocol negotiation request
             _actor.message(ConnectionMessages.OPEN(null, pi._protocolMajor + "-" + pi._protocolMinor, false, true));
 
@@ -356,49 +313,37 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
             String locales = "en_US";
 
             AMQMethodBody responseBody = getMethodRegistry().createConnectionStartBody((short) getProtocolMajorVersion(),
-                                                                                       (short) pv.getActualMinorVersion(),
-                                                                                       null,
-                                                                                       mechanisms.getBytes(),
-                                                                                       locales.getBytes());
+                    (short) pv.getActualMinorVersion(),
+                    null,
+                    mechanisms.getBytes(),
+                    locales.getBytes());
             _sender.send(responseBody.generateFrame(0).toNioByteBuffer());
 
-        }
-        catch (AMQException e)
-        {
+        } catch (AMQException e) {
             _logger.info("Received unsupported protocol initiation for protocol version: " + getProtocolVersion());
 
             _sender.send(new ProtocolInitiation(ProtocolVersion.getLatestSupportedVersion()).toNioByteBuffer());
         }
     }
 
-    public void methodFrameReceived(int channelId, AMQMethodBody methodBody)
-    {
+    public void methodFrameReceived(int channelId, AMQMethodBody methodBody) {
         final AMQMethodEvent<AMQMethodBody> evt = new AMQMethodEvent<AMQMethodBody>(channelId, methodBody);
-        try
-        {
-            try
-            {
+        try {
+            try {
                 boolean wasAnyoneInterested = _stateManager.methodReceived(evt);
 
-                if (!_frameListeners.isEmpty())
-                {
-                    for (AMQMethodListener listener : _frameListeners)
-                    {
+                if (!_frameListeners.isEmpty()) {
+                    for (AMQMethodListener listener : _frameListeners) {
                         wasAnyoneInterested = listener.methodReceived(evt) || wasAnyoneInterested;
                     }
                 }
 
-                if (!wasAnyoneInterested)
-                {
+                if (!wasAnyoneInterested) {
                     throw new AMQNoMethodHandlerException(evt);
                 }
-            }
-            catch (AMQChannelException e)
-            {
-                if (getChannel(channelId) != null)
-                {
-                    if (_logger.isInfoEnabled())
-                    {
+            } catch (AMQChannelException e) {
+                if (getChannel(channelId) != null) {
+                    if (_logger.isInfoEnabled()) {
                         _logger.info("Closing channel due to: " + e.getMessage());
                     }
 
@@ -407,44 +352,33 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
                     AMQConnectionException ce = evt.getMethod().getConnectionException(AMQConstant.ACCESS_REFUSED, e.getMessage());
                     _logger.info(e.getMessage() + " whilst processing:" + methodBody);
                     closeConnection(channelId, ce, false);
-                }
-                else
-                {
-                    if (_logger.isDebugEnabled())
-                    {
+                } else {
+                    if (_logger.isDebugEnabled()) {
                         _logger.debug("ChannelException occured on non-existent channel:" + e.getMessage());
                     }
 
-                    if (_logger.isInfoEnabled())
-                    {
+                    if (_logger.isInfoEnabled()) {
                         _logger.info("Closing connection due to: " + e.getMessage());
                     }
 
                     AMQConnectionException ce =
                             evt.getMethod().getConnectionException(AMQConstant.CHANNEL_ERROR,
-                                                                   AMQConstant.CHANNEL_ERROR.getName().toString());
+                                    AMQConstant.CHANNEL_ERROR.getName().toString());
 
                     _logger.info(e.getMessage() + " whilst processing:" + methodBody);
                     closeConnection(channelId, ce, false);
                 }
-            }
-            catch (AMQConnectionException e)
-            {
+            } catch (AMQConnectionException e) {
                 _logger.info(e.getMessage() + " whilst processing:" + methodBody);
                 closeConnection(channelId, e, false);
-            }
-            catch (AMQSecurityException e)
-            {
+            } catch (AMQSecurityException e) {
                 AMQConnectionException ce = evt.getMethod().getConnectionException(AMQConstant.ACCESS_REFUSED, e.getMessage());
                 _logger.info(e.getMessage() + " whilst processing:" + methodBody);
                 closeConnection(channelId, ce, false);
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
 
-            for (AMQMethodListener listener : _frameListeners)
-            {
+            for (AMQMethodListener listener : _frameListeners) {
                 listener.error(e);
             }
 
@@ -455,8 +389,7 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
         }
     }
 
-    public void contentHeaderReceived(int channelId, ContentHeaderBody body) throws AMQException
-    {
+    public void contentHeaderReceived(int channelId, ContentHeaderBody body) throws AMQException {
 
         AMQChannel channel = getAndAssertChannel(channelId);
 
@@ -466,15 +399,13 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
 
     }
 
-    public void contentBodyReceived(int channelId, ContentBody body) throws AMQException
-    {
+    public void contentBodyReceived(int channelId, ContentBody body) throws AMQException {
         AMQChannel channel = getAndAssertChannel(channelId);
 
         channel.publishContentBody(body);
     }
 
-    public void heartbeatBodyReceived(int channelId, HeartbeatBody body)
-    {
+    public void heartbeatBodyReceived(int channelId, HeartbeatBody body) {
         // NO - OP
     }
 
@@ -484,138 +415,110 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
      *
      * @param frame the frame to write
      */
-    public void writeFrame(AMQDataBlock frame)
-    {
+    public void writeFrame(AMQDataBlock frame) {
         _lastSent = frame;
         final ByteBuffer buf = frame.toNioByteBuffer();
         _lastIoTime = System.currentTimeMillis();
         _writtenBytes += buf.remaining();
-        Job.fireAsynchEvent(_poolReference.getPool(), _writeJob, new Runnable()
-        {
-            public void run()
-            {
+        Job.fireAsynchEvent(_poolReference.getPool(), _writeJob, new Runnable() {
+            public void run() {
                 _sender.send(buf);
             }
         });
     }
 
-    public AMQShortString getContextKey()
-    {
+    public AMQShortString getContextKey() {
         return _contextKey;
     }
 
-    public void setContextKey(AMQShortString contextKey)
-    {
+    public void setContextKey(AMQShortString contextKey) {
         _contextKey = contextKey;
     }
 
-    public List<AMQChannel> getChannels()
-    {
+    public List<AMQChannel> getChannels() {
         return new ArrayList<AMQChannel>(_channelMap.values());
     }
 
-    public AMQChannel getAndAssertChannel(int channelId) throws AMQException
-    {
+    public AMQChannel getAndAssertChannel(int channelId) throws AMQException {
         AMQChannel channel = getChannel(channelId);
-        if (channel == null)
-        {
+        if (channel == null) {
             throw new AMQException(AMQConstant.NOT_FOUND, "Channel not found with id:" + channelId);
         }
 
         return channel;
     }
 
-    public AMQChannel getChannel(int channelId)
-    {
+    public AMQChannel getChannel(int channelId) {
         final AMQChannel channel =
                 ((channelId & CHANNEL_CACHE_SIZE) == channelId) ? _cachedChannels[channelId] : _channelMap.get(channelId);
-        if ((channel == null) || channel.isClosing())
-        {
+        if ((channel == null) || channel.isClosing()) {
             if (channel == null) {
-                _logger.debug(" channel with id "+ channelId + " is null");
+                _logger.debug(" channel with id " + channelId + " is null");
             }
-            if(channel != null && channel.isClosing()) {
-                _logger.debug("Channel with id "+ channelId +" is closing");
+            if (channel != null && channel.isClosing()) {
+                _logger.debug("Channel with id " + channelId + " is closing");
             }
             return null;
-        }
-        else
-        {
+        } else {
             return channel;
         }
     }
 
-    public boolean channelAwaitingClosure(int channelId)
-    {
+    public boolean channelAwaitingClosure(int channelId) {
         return !_closingChannelsList.isEmpty() && _closingChannelsList.containsKey(channelId);
     }
 
-    public void addChannel(AMQChannel channel) throws AMQException
-    {
-        if (_closed)
-        {
+    public void addChannel(AMQChannel channel) throws AMQException {
+        if (_closed) {
             throw new AMQException("Session is closed");
         }
 
         final int channelId = channel.getChannelId();
 
-        if (_closingChannelsList.containsKey(channelId))
-        {
+        if (_closingChannelsList.containsKey(channelId)) {
             throw new AMQException("Session is marked awaiting channel close");
         }
 
-        if (_channelMap.size() == _maxNoOfChannels)
-        {
+        if (_channelMap.size() == _maxNoOfChannels) {
             String errorMessage =
                     toString() + ": maximum number of channels has been reached (" + _maxNoOfChannels
-                    + "); can't create channel";
+                            + "); can't create channel";
             _logger.error(errorMessage);
             throw new AMQException(AMQConstant.NOT_ALLOWED, errorMessage);
-        }
-        else
-        {
+        } else {
             _channelMap.put(channel.getChannelId(), channel);
         }
 
-        if (((channelId & CHANNEL_CACHE_SIZE) == channelId))
-        {
+        if (((channelId & CHANNEL_CACHE_SIZE) == channelId)) {
             _cachedChannels[channelId] = channel;
         }
 
         checkForNotification();
     }
 
-    private void checkForNotification()
-    {
+    private void checkForNotification() {
         int channelsCount = _channelMap.size();
-        if (_managedObject != null && channelsCount >= _maxNoOfChannels)
-        {
+        if (_managedObject != null && channelsCount >= _maxNoOfChannels) {
             _managedObject.notifyClients("Channel count (" + channelsCount + ") has reached the threshold value");
         }
     }
 
-    public Long getMaximumNumberOfChannels()
-    {
+    public Long getMaximumNumberOfChannels() {
         return _maxNoOfChannels;
     }
 
-    public void setMaximumNumberOfChannels(Long value)
-    {
+    public void setMaximumNumberOfChannels(Long value) {
         _maxNoOfChannels = value;
     }
 
-    public void commitTransactions(AMQChannel channel) throws AMQException
-    {
-        if ((channel != null) && channel.isTransactional())
-        {
+    public void commitTransactions(AMQChannel channel) throws AMQException {
+        if ((channel != null) && channel.isTransactional()) {
             channel.commit();
         }
     }
 
-    public void rollbackTransactions(AMQChannel channel) throws AMQException
-    {
-        if ((channel != null) && channel.isTransactional())
-        {
+    public void rollbackTransactions(AMQChannel channel) throws AMQException {
+        if ((channel != null) && channel.isTransactional()) {
             channel.rollback();
         }
     }
@@ -625,36 +528,27 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
      * subscriptions (this may in turn remove queues if they are auto delete</li> </ul>
      *
      * @param channelId id of the channel to close
-     *
      * @throws AMQException             if an error occurs closing the channel
      * @throws IllegalArgumentException if the channel id is not valid
      */
-    public void closeChannel(int channelId) throws AMQException
-    {
+    public void closeChannel(int channelId) throws AMQException {
         final AMQChannel channel = getChannel(channelId);
-        if (channel == null)
-        {
+        if (channel == null) {
             throw new IllegalArgumentException("Unknown channel id");
-        }
-        else
-        {
-            try
-            {
+        } else {
+            try {
                 channel.close();
                 markChannelAwaitingCloseOk(channelId);
-                if(_logger.isDebugEnabled()){
-                    _logger.debug("Channel closed "+ channelId);
+                if (_logger.isDebugEnabled()) {
+                    _logger.debug("Channel closed " + channelId);
                 }
-            }
-            finally
-            {
+            } finally {
                 removeChannel(channelId);
             }
         }
     }
 
-    public void closeChannelOk(int channelId)
-    {
+    public void closeChannelOk(int channelId) {
         // todo QPID-847 - This is called from two lcoations ChannelCloseHandler and ChannelCloseOkHandler.
         // When it is the CC_OK_Handler then it makes sence to remove the channel else we will leak memory.
         // We do it from the Close Handler as we are sending the OK back to the client.
@@ -667,8 +561,7 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
         _closingChannelsList.remove(channelId);
     }
 
-    private void markChannelAwaitingCloseOk(int channelId)
-    {
+    private void markChannelAwaitingCloseOk(int channelId) {
         _closingChannelsList.put(channelId, System.currentTimeMillis());
     }
 
@@ -677,11 +570,9 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
      *
      * @param channelId The channel to remove
      */
-    public void removeChannel(int channelId)
-    {
+    public void removeChannel(int channelId) {
         _channelMap.remove(channelId);
-        if ((channelId & CHANNEL_CACHE_SIZE) == channelId)
-        {
+        if ((channelId & CHANNEL_CACHE_SIZE) == channelId) {
             _cachedChannels[channelId] = null;
         }
     }
@@ -691,10 +582,8 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
      *
      * @param delay delay in seconds (not ms)
      */
-    public void initHeartbeats(int delay)
-    {
-        if (delay > 0)
-        {
+    public void initHeartbeats(int delay) {
+        if (delay > 0) {
             _network.setMaxWriteIdle(delay);
             _network.setMaxReadIdle((int) (ApplicationRegistry.getInstance().getConfiguration().getHeartBeatTimeout() * delay));
         }
@@ -705,76 +594,60 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
      *
      * @throws AMQException if an error occurs while closing any channel
      */
-    private void closeAllChannels() throws AMQException
-    {
-        for (AMQChannel channel : _channelMap.values())
-        {
+    private void closeAllChannels() throws AMQException {
+        for (AMQChannel channel : _channelMap.values()) {
             channel.close();
         }
 
         _channelMap.clear();
-        for (int i = 0; i <= CHANNEL_CACHE_SIZE; i++)
-        {
+        for (int i = 0; i <= CHANNEL_CACHE_SIZE; i++) {
             _cachedChannels[i] = null;
         }
     }
 
-    /** This must be called when the session is _closed in order to free up any resources managed by the session. */
-    public void closeSession() throws AMQException
-    {
-        if(_closing.compareAndSet(false,true))
-        {
+    /**
+     * This must be called when the session is _closed in order to free up any resources managed by the session.
+     */
+    public void closeSession() throws AMQException {
+        if (_closing.compareAndSet(false, true)) {
             // REMOVE THIS SHOULD NOT BE HERE.
-            if (CurrentActor.get() == null)
-            {
+            if (CurrentActor.get() == null) {
                 CurrentActor.set(_actor);
             }
-            if (!_closed)
-            {
-                if (_virtualHost != null)
-                {
+            if (!_closed) {
+                if (_virtualHost != null) {
                     _virtualHost.getConnectionRegistry().deregisterConnection(this);
                 }
 
                 closeAllChannels();
-                
+
                 getConfigStore().removeConfiguredObject(this);
 
-                if (_managedObject != null)
-                {
+                if (_managedObject != null) {
                     _managedObject.unregister();
                     // Ensure we only do this once.
                     _managedObject = null;
                 }
 
-                for (Task task : _taskList)
-                {
+                for (Task task : _taskList) {
                     task.doTask(this);
                 }
 
                 Broker.getEventDispatcher().removeObserver(this);
 
-                synchronized(this)
-                {
+                synchronized (this) {
                     _closed = true;
                     notifyAll();
                 }
                 _poolReference.releaseExecutorService();
                 CurrentActor.get().message(_logSubject, ConnectionMessages.CLOSE());
             }
-        }
-        else
-        {
-            synchronized(this)
-            {
-                while(!_closed)
-                {
-                    try
-                    {
+        } else {
+            synchronized (this) {
+                while (!_closed) {
+                    try {
                         wait(1000);
-                    }
-                    catch (InterruptedException e)
-                    {
+                    } catch (InterruptedException e) {
 
                     }
                 }
@@ -782,10 +655,8 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
         }
     }
 
-    public void closeConnection(int channelId, AMQConnectionException e, boolean closeProtocolSession) throws AMQException
-    {
-        if (_logger.isInfoEnabled())
-        {
+    public void closeConnection(int channelId, AMQConnectionException e, boolean closeProtocolSession) throws AMQException {
+        if (_logger.isInfoEnabled()) {
             _logger.info("Closing connection due to: " + e);
         }
 
@@ -794,38 +665,32 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
         _stateManager.changeState(AMQState.CONNECTION_CLOSING);
         closeSession();
 
-        if (closeProtocolSession)
-        {
+        if (closeProtocolSession) {
             closeProtocolSession();
         }
     }
 
-    public void closeProtocolSession()
-    {
+    public void closeProtocolSession() {
         _sender.close();
-        try
-        {
+        try {
             _stateManager.changeState(AMQState.CONNECTION_CLOSED);
-        }
-        catch (AMQException e)
-        {
+        } catch (AMQException e) {
             _logger.info(e.getMessage());
         }
     }
 
-    public String toString()
-    {
+    public String toString() {
         return getRemoteAddress() + "(" + (getAuthorizedPrincipal() == null ? "?" : getAuthorizedPrincipal().getName() + ")");
     }
 
-    public String dump()
-    {
+    public String dump() {
         return this + " last_sent=" + _lastSent + " last_received=" + _lastReceived;
     }
 
-    /** @return an object that can be used to identity */
-    public Object getKey()
-    {
+    /**
+     * @return an object that can be used to identity
+     */
+    public Object getKey() {
         return getRemoteAddress();
     }
 
@@ -835,41 +700,31 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
      *
      * @return a String FQDN
      */
-    public String getLocalFQDN()
-    {
+    public String getLocalFQDN() {
         SocketAddress address = _network.getLocalAddress();
-        if (address instanceof InetSocketAddress)
-        {
+        if (address instanceof InetSocketAddress) {
             return ((InetSocketAddress) address).getHostName();
-        }
-        else
-        {
+        } else {
             throw new IllegalArgumentException("Unsupported socket address class: " + address);
         }
     }
 
-    public SaslServer getSaslServer()
-    {
+    public SaslServer getSaslServer() {
         return _saslServer;
     }
 
-    public void setSaslServer(SaslServer saslServer)
-    {
+    public void setSaslServer(SaslServer saslServer) {
         _saslServer = saslServer;
     }
 
-    public FieldTable getClientProperties()
-    {
+    public FieldTable getClientProperties() {
         return _clientProperties;
     }
 
-    public void setClientProperties(FieldTable clientProperties)
-    {
+    public void setClientProperties(FieldTable clientProperties) {
         _clientProperties = clientProperties;
-        if (_clientProperties != null)
-        {
-            if (_clientProperties.getString(CLIENT_PROPERTIES_INSTANCE) != null)
-            {
+        if (_clientProperties != null) {
+            if (_clientProperties.getString(CLIENT_PROPERTIES_INSTANCE) != null) {
                 String clientID = _clientProperties.getString(CLIENT_PROPERTIES_INSTANCE);
                 setContextKey(new AMQShortString(clientID));
 
@@ -877,175 +732,139 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
                 _actor.message(ConnectionMessages.OPEN(clientID, _protocolVersion.toString(), true, true));
             }
 
-            if (_clientProperties.getString(ClientProperties.version.toString()) != null)
-            {
+            if (_clientProperties.getString(ClientProperties.version.toString()) != null) {
                 _clientVersion = new AMQShortString(_clientProperties.getString(ClientProperties.version.toString()));
             }
         }
         _sessionIdentifier = new ProtocolSessionIdentifier(this);
     }
 
-    private void setProtocolVersion(ProtocolVersion pv)
-    {
+    private void setProtocolVersion(ProtocolVersion pv) {
         _protocolVersion = pv;
 
         _protocolOutputConverter = ProtocolOutputConverterRegistry.getConverter(this);
         _dispatcher = ServerMethodDispatcherImpl.createMethodDispatcher(_stateManager, _protocolVersion);
     }
 
-    public byte getProtocolMajorVersion()
-    {
+    public byte getProtocolMajorVersion() {
         return _protocolVersion.getMajorVersion();
     }
 
-    public ProtocolVersion getProtocolVersion()
-    {
+    public ProtocolVersion getProtocolVersion() {
         return _protocolVersion;
     }
 
-    public byte getProtocolMinorVersion()
-    {
+    public byte getProtocolMinorVersion() {
         return _protocolVersion.getMinorVersion();
     }
 
-    public boolean isProtocolVersion(byte major, byte minor)
-    {
+    public boolean isProtocolVersion(byte major, byte minor) {
         return (getProtocolMajorVersion() == major) && (getProtocolMinorVersion() == minor);
     }
 
-    public MethodRegistry getRegistry()
-    {
+    public MethodRegistry getRegistry() {
         return getMethodRegistry();
     }
 
-    public Object getClientIdentifier()
-    {
+    public Object getClientIdentifier() {
         return _network.getRemoteAddress();
     }
 
-    public VirtualHost getVirtualHost()
-    {
+    public VirtualHost getVirtualHost() {
         return _virtualHost;
     }
 
-    public void setVirtualHost(VirtualHost virtualHost) throws AMQException
-    {
+    public void setVirtualHost(VirtualHost virtualHost) throws AMQException {
         _virtualHost = virtualHost;
 
         _virtualHost.getConnectionRegistry().registerConnection(this);
-        
+
         _configStore.addConfiguredObject(this);
 
-        try
-        {
+        try {
             _managedObject = createMBean();
             _managedObject.register();
-        }
-        catch (JMException e)
-        {
+        } catch (JMException e) {
             _logger.error(e);
         }
     }
 
-    public void addSessionCloseTask(Task task)
-    {
+    public void addSessionCloseTask(Task task) {
         _taskList.add(task);
     }
 
-    public void removeSessionCloseTask(Task task)
-    {
+    public void removeSessionCloseTask(Task task) {
         _taskList.remove(task);
     }
 
-    public ProtocolOutputConverter getProtocolOutputConverter()
-    {
+    public ProtocolOutputConverter getProtocolOutputConverter() {
         return _protocolOutputConverter;
     }
 
-    public void setAuthorizedSubject(final Subject authorizedSubject)
-    {
-        if (authorizedSubject == null)
-        {
+    public void setAuthorizedSubject(final Subject authorizedSubject) {
+        if (authorizedSubject == null) {
             throw new IllegalArgumentException("authorizedSubject cannot be null");
         }
         _authorizedSubject = authorizedSubject;
     }
-    
-    public Subject getAuthorizedSubject()
-    {
+
+    public Subject getAuthorizedSubject() {
         return _authorizedSubject;
     }
-    
-    public Principal getAuthorizedPrincipal()
-    {
+
+    public Principal getAuthorizedPrincipal() {
         return _authorizedSubject == null ? null : UsernamePrincipal.getUsernamePrincipalFromSubject(_authorizedSubject);
     }
 
-    public SocketAddress getRemoteAddress()
-    {
+    public SocketAddress getRemoteAddress() {
         return _network.getRemoteAddress();
     }
 
-    public SocketAddress getLocalAddress()
-    {
+    public SocketAddress getLocalAddress() {
         return _network.getLocalAddress();
     }
 
-    public MethodRegistry getMethodRegistry()
-    {
+    public MethodRegistry getMethodRegistry() {
         return MethodRegistry.getMethodRegistry(getProtocolVersion());
     }
 
-    public MethodDispatcher getMethodDispatcher()
-    {
+    public MethodDispatcher getMethodDispatcher() {
         return _dispatcher;
     }
 
-    public void closed()
-    {
+    public void closed() {
         // Set user's AuthorizedSubject in current thread
         org.wso2.andes.server.security.SecurityManager
                 .setThreadSubject(this.getAuthorizedSubject());
-        try
-        {
+        try {
             closeSession();
-        }
-        catch (AMQException e)
-        {
-           _logger.error("Could not close protocol engine", e);
+        } catch (AMQException e) {
+            _logger.error("Could not close protocol engine", e);
         }
     }
 
-    public void readerIdle()
-    {
+    public void readerIdle() {
         // Nothing
     }
 
-    public void writerIdle()
-    {
+    public void writerIdle() {
         _sender.send(HeartbeatBody.FRAME.toNioByteBuffer());
     }
 
-    public void exception(Throwable throwable)
-    {
-        if (throwable instanceof AMQProtocolHeaderException)
-        {
+    public void exception(Throwable throwable) {
+        if (throwable instanceof AMQProtocolHeaderException) {
             writeFrame(new ProtocolInitiation(ProtocolVersion.getLatestSupportedVersion()));
             _sender.close();
 
             _logger.error("Error in protocol initiation " + this + ":" + getRemoteAddress() + " :" + throwable.getMessage(), throwable);
-        }
-        else if (throwable instanceof IOException)
-        {
+        } else if (throwable instanceof IOException) {
             _logger.error("IOException caught in" + this + ", session closed implictly: " + throwable);
-        }
-        else
-        {
+        } else {
             _logger.error("Exception caught in" + this + ", closing session explictly: " + throwable, throwable);
 
 
             MethodRegistry methodRegistry = MethodRegistry.getMethodRegistry(getProtocolVersion());
-            ConnectionCloseBody closeBody = methodRegistry.createConnectionCloseBody(200,new AMQShortString(throwable.getMessage()),0,0);
+            ConnectionCloseBody closeBody = methodRegistry.createConnectionCloseBody(200, new AMQShortString(throwable.getMessage()), 0, 0);
 
             writeFrame(closeBody.generateFrame(0));
 
@@ -1053,8 +872,7 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
         }
     }
 
-    public void init()
-    {
+    public void init() {
         // Do nothing
     }
 
@@ -1063,309 +881,251 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
         return _network.isBlocked();
     }
 
-    public void setSender(Sender<ByteBuffer> sender)
-    {
+    public void setSender(Sender<ByteBuffer> sender) {
         // Do nothing
     }
 
-    public long getReadBytes()
-    {
+    public long getReadBytes() {
         return _readBytes;
     }
 
-    public long getWrittenBytes()
-    {
+    public long getWrittenBytes() {
         return _writtenBytes;
     }
 
-    public long getLastIoTime()
-    {
+    public long getLastIoTime() {
         return _lastIoTime;
     }
 
-    public ProtocolSessionIdentifier getSessionIdentifier()
-    {
+    public ProtocolSessionIdentifier getSessionIdentifier() {
         return _sessionIdentifier;
     }
 
-    public String getClientVersion()
-    {
+    public String getClientVersion() {
         return (_clientVersion == null) ? null : _clientVersion.toString();
     }
 
-    public Boolean isIncoming()
-    {
+    public Boolean isIncoming() {
         return true;
     }
 
-    public Boolean isSystemConnection()
-    {
+    public Boolean isSystemConnection() {
         return false;
     }
 
-    public Boolean isFederationLink()
-    {
+    public Boolean isFederationLink() {
         return false;
     }
 
-    public String getAuthId()
-    {
+    public String getAuthId() {
         return getAuthorizedPrincipal().getName();
     }
 
-    public Integer getRemotePID()
-    {
+    public Integer getRemotePID() {
         return null;
     }
 
-    public String getRemoteProcessName()
-    {
+    public String getRemoteProcessName() {
         return null;
     }
 
-    public Integer getRemoteParentPID()
-    {
+    public Integer getRemoteParentPID() {
         return null;
     }
 
-    public ConfigStore getConfigStore()
-    {
+    public ConfigStore getConfigStore() {
         return _configStore;
     }
 
-    public ConnectionConfigType getConfigType()
-    {
+    public ConnectionConfigType getConfigType() {
         return ConnectionConfigType.getInstance();
     }
 
-    public ConfiguredObject getParent()
-    {
+    public ConfiguredObject getParent() {
         return getVirtualHost();
     }
 
-    public boolean isDurable()
-    {
+    public boolean isDurable() {
         return false;
     }
 
-    public UUID getId()
-    {
+    public UUID getId() {
         return _id;
     }
 
-    public long getConnectionId()
-    {
+    public long getConnectionId() {
         return getSessionID();
     }
 
-    public String getAddress()
-    {
+    public String getAddress() {
         return String.valueOf(getRemoteAddress());
     }
 
-    public long getCreateTime()
-    {
+    public long getCreateTime() {
         return _createTime;
     }
 
-    public Boolean isShadow()
-    {
+    public Boolean isShadow() {
         return false;
     }
-    
-    public void mgmtClose()
-    {
+
+    public void mgmtClose() {
         MethodRegistry methodRegistry = getMethodRegistry();
         ConnectionCloseBody responseBody =
                 methodRegistry.createConnectionCloseBody(
                         AMQConstant.REPLY_SUCCESS.getCode(),
                         new AMQShortString("The connection was closed using the broker's management interface."),
-                        0,0);
+                        0, 0);
 
         // This seems ugly but because we use closeConnection in both normal
         // broker operation and as part of the management interface it cannot
         // be avoided. The Current Actor will be null when this method is
         // called via the QMF management interface. As such we need to set one.
         boolean removeActor = false;
-        if (CurrentActor.get() == null)
-        {
+        if (CurrentActor.get() == null) {
             removeActor = true;
             CurrentActor.set(new ManagementActor(_actor.getRootMessageLogger()));
         }
 
-        try
-        {
+        try {
             writeFrame(responseBody.generateFrame(0));
 
-            try
-            {
+            try {
 
                 closeSession();
-            }
-            catch (AMQException ex)
-            {
+            } catch (AMQException ex) {
                 throw new RuntimeException(ex);
             }
-        }
-        finally
-        {
-            if (removeActor)
-            {
+        } finally {
+            if (removeActor) {
                 CurrentActor.remove();
             }
         }
     }
 
-    public void mgmtCloseChannel(int channelId)
-    {
+    public void mgmtCloseChannel(int channelId) {
         MethodRegistry methodRegistry = getMethodRegistry();
         ChannelCloseBody responseBody =
                 methodRegistry.createChannelCloseBody(
                         AMQConstant.REPLY_SUCCESS.getCode(),
                         new AMQShortString("The channel was closed using the broker's management interface."),
-                        0,0);
+                        0, 0);
 
         // This seems ugly but because we use AMQChannel.close() in both normal
         // broker operation and as part of the management interface it cannot
         // be avoided. The Current Actor will be null when this method is
         // called via the QMF management interface. As such we need to set one.
         boolean removeActor = false;
-        if (CurrentActor.get() == null)
-        {
+        if (CurrentActor.get() == null) {
             removeActor = true;
             CurrentActor.set(new ManagementActor(_actor.getRootMessageLogger()));
         }
 
-        try
-        {
+        try {
             writeFrame(responseBody.generateFrame(channelId));
 
-            try
-            {
+            try {
                 closeChannel(channelId);
-            }
-            catch (AMQException ex)
-            {
+            } catch (AMQException ex) {
                 throw new RuntimeException(ex);
             }
-        }
-        finally
-        {
-            if (removeActor)
-            {
+        } finally {
+            if (removeActor) {
                 CurrentActor.remove();
             }
         }
     }
 
-    public String getClientID()
-    {
+    public String getClientID() {
         return getContextKey().toString();
     }
 
-    public void closeSession(AMQSessionModel session, AMQConstant cause, String message) throws AMQException
-    {
-        closeChannel((Integer)session.getID());
+    public void closeSession(AMQSessionModel session, AMQConstant cause, String message) throws AMQException {
+        closeChannel((Integer) session.getID());
 
         MethodRegistry methodRegistry = getMethodRegistry();
         ChannelCloseBody responseBody =
                 methodRegistry.createChannelCloseBody(
                         cause.getCode(),
                         new AMQShortString(message),
-                        0,0);
+                        0, 0);
 
-        writeFrame(responseBody.generateFrame((Integer)session.getID()));       
+        writeFrame(responseBody.generateFrame((Integer) session.getID()));
     }
 
-    public void close(AMQConstant cause, String message) throws AMQException
-    {
+    public void close(AMQConstant cause, String message) throws AMQException {
         closeConnection(0, new AMQConnectionException(cause, message, 0, 0,
-		                getProtocolOutputConverter().getProtocolMajorVersion(),
-		                getProtocolOutputConverter().getProtocolMinorVersion(),
-		                (Throwable) null), true);
+                getProtocolOutputConverter().getProtocolMajorVersion(),
+                getProtocolOutputConverter().getProtocolMinorVersion(),
+                (Throwable) null), true);
     }
 
-    public List<AMQSessionModel> getSessionModels()
-    {
-		List<AMQSessionModel> sessions = new ArrayList<AMQSessionModel>(); 
-		for (AMQChannel channel : getChannels())
-		{
-		    sessions.add((AMQSessionModel) channel);
-		}
-		return sessions;
+    public List<AMQSessionModel> getSessionModels() {
+        List<AMQSessionModel> sessions = new ArrayList<AMQSessionModel>();
+        for (AMQChannel channel : getChannels()) {
+            sessions.add((AMQSessionModel) channel);
+        }
+        return sessions;
     }
 
-    public LogSubject getLogSubject()
-    {
+    public LogSubject getLogSubject() {
         return _logSubject;
     }
 
-    public void registerMessageDelivered(long messageSize)
-    {
-        if (isStatisticsEnabled())
-        {
+    public void registerMessageDelivered(long messageSize) {
+        if (isStatisticsEnabled()) {
             _messagesDelivered.registerEvent(1L);
             _dataDelivered.registerEvent(messageSize);
         }
         _virtualHost.registerMessageDelivered(messageSize);
     }
 
-    public void registerMessageReceived(long messageSize, long timestamp)
-    {
-        if (isStatisticsEnabled())
-        {
+    public void registerMessageReceived(long messageSize, long timestamp) {
+        if (isStatisticsEnabled()) {
             _messagesReceived.registerEvent(1L, timestamp);
             _dataReceived.registerEvent(messageSize, timestamp);
         }
         _virtualHost.registerMessageReceived(messageSize, timestamp);
     }
-    
-    public StatisticsCounter getMessageReceiptStatistics()
-    {
+
+    public StatisticsCounter getMessageReceiptStatistics() {
         return _messagesReceived;
     }
-    
-    public StatisticsCounter getDataReceiptStatistics()
-    {
+
+    public StatisticsCounter getDataReceiptStatistics() {
         return _dataReceived;
     }
-    
-    public StatisticsCounter getMessageDeliveryStatistics()
-    {
+
+    public StatisticsCounter getMessageDeliveryStatistics() {
         return _messagesDelivered;
     }
-    
-    public StatisticsCounter getDataDeliveryStatistics()
-    {
+
+    public StatisticsCounter getDataDeliveryStatistics() {
         return _dataDelivered;
     }
-    
-    public void resetStatistics()
-    {
+
+    public void resetStatistics() {
         _messagesDelivered.reset();
         _dataDelivered.reset();
         _messagesReceived.reset();
         _dataReceived.reset();
     }
 
-    public void initialiseStatistics()
-    {
+    public void initialiseStatistics() {
         setStatisticsEnabled(!StatisticsCounter.DISABLE_STATISTICS &&
                 _registry.getConfiguration().isStatisticsGenerationConnectionsEnabled());
-        
+
         _messagesDelivered = new StatisticsCounter("messages-delivered-" + getSessionID());
         _dataDelivered = new StatisticsCounter("data-delivered-" + getSessionID());
         _messagesReceived = new StatisticsCounter("messages-received-" + getSessionID());
         _dataReceived = new StatisticsCounter("data-received-" + getSessionID());
     }
 
-    public boolean isStatisticsEnabled()
-    {
+    public boolean isStatisticsEnabled() {
         return _statisticsEnabled;
     }
 
-    public void setStatisticsEnabled(boolean enabled)
-    {
+    public void setStatisticsEnabled(boolean enabled) {
         _statisticsEnabled = enabled;
     }
 
@@ -1378,7 +1138,7 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
                     for (Map.Entry<Integer, AMQChannel> entry : _channelMap.entrySet()) {
                         AMQChannel channel = entry.getValue();
                         if (channel != null) {
-                            if(channel.isSubscriptionChannel()) {
+                            if (channel.isSubscriptionChannel()) {
                                 return;
                             }
                             channel.blockChannel();
@@ -1387,7 +1147,7 @@ public class AMQProtocolEngine implements ProtocolEngine, Managable, AMQProtocol
                     }
                     _network.block();
                     _logger.warn("Memory Threshold Exceeded. Session '" + getId().toString() +
-                                "' Will Be Flow Controlled" );
+                            "' Will Be Flow Controlled");
                 }
             case PER_CONNECTION_MESSAGE_THRESHOLD_EXCEEDED:
                 if (isFlowControlled.compareAndSet(Boolean.FALSE, Boolean.TRUE)) {

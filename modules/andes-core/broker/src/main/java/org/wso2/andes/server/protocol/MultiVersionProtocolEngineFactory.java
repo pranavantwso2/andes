@@ -17,17 +17,16 @@
  */
 package org.wso2.andes.server.protocol;
 
-import java.util.EnumSet;
-import java.util.Set;
-
 import org.wso2.andes.protocol.ProtocolEngine;
 import org.wso2.andes.protocol.ProtocolEngineFactory;
 import org.wso2.andes.server.registry.ApplicationRegistry;
 import org.wso2.andes.server.registry.IApplicationRegistry;
 import org.wso2.andes.transport.network.NetworkConnection;
 
-public class MultiVersionProtocolEngineFactory implements ProtocolEngineFactory
-{
+import java.util.EnumSet;
+import java.util.Set;
+
+public class MultiVersionProtocolEngineFactory implements ProtocolEngineFactory {
     private static final Set<AmqpProtocolVersion> ALL_VERSIONS = EnumSet.allOf(AmqpProtocolVersion.class);
 
     private final IApplicationRegistry _appRegistry;
@@ -35,32 +34,27 @@ public class MultiVersionProtocolEngineFactory implements ProtocolEngineFactory
     private final Set<AmqpProtocolVersion> _supported;
 
 
-    public MultiVersionProtocolEngineFactory()
-    {
+    public MultiVersionProtocolEngineFactory() {
         this(1, "localhost", ALL_VERSIONS);
     }
 
-    public MultiVersionProtocolEngineFactory(String fqdn, Set<AmqpProtocolVersion> versions)
-    {
+    public MultiVersionProtocolEngineFactory(String fqdn, Set<AmqpProtocolVersion> versions) {
         this(1, fqdn, versions);
     }
 
 
-    public MultiVersionProtocolEngineFactory(String fqdn)
-    {
+    public MultiVersionProtocolEngineFactory(String fqdn) {
         this(1, fqdn, ALL_VERSIONS);
     }
 
-    public MultiVersionProtocolEngineFactory(int instance, String fqdn, Set<AmqpProtocolVersion> supportedVersions)
-    {
+    public MultiVersionProtocolEngineFactory(int instance, String fqdn, Set<AmqpProtocolVersion> supportedVersions) {
         _appRegistry = ApplicationRegistry.getInstance();
         _fqdn = fqdn;
         _supported = supportedVersions;
     }
 
 
-    public ProtocolEngine newProtocolEngine(NetworkConnection network)
-    {
+    public ProtocolEngine newProtocolEngine(NetworkConnection network) {
         return new MultiVersionProtocolEngine(_appRegistry, _fqdn, _supported, network);
     }
 }

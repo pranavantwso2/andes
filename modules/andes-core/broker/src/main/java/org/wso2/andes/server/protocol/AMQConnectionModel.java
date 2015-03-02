@@ -17,26 +17,25 @@
  */
 package org.wso2.andes.server.protocol;
 
-import java.util.List;
-import java.util.UUID;
-
 import org.wso2.andes.AMQException;
 import org.wso2.andes.protocol.AMQConstant;
 import org.wso2.andes.server.logging.LogSubject;
 import org.wso2.andes.server.stats.StatisticsGatherer;
 
-public interface AMQConnectionModel extends StatisticsGatherer
-{
+import java.util.List;
+import java.util.UUID;
+
+public interface AMQConnectionModel extends StatisticsGatherer {
     /**
      * get a unique id for this connection.
-     * 
+     *
      * @return a {@link UUID} representing the connection
      */
     public UUID getId();
-    
+
     /**
      * Close the underlying Connection
-     * 
+     *
      * @param cause
      * @param message
      * @throws org.wso2.andes.AMQException
@@ -45,7 +44,7 @@ public interface AMQConnectionModel extends StatisticsGatherer
 
     /**
      * Close the given requested Session
-     * 
+     *
      * @param session
      * @param cause
      * @param message
@@ -54,10 +53,10 @@ public interface AMQConnectionModel extends StatisticsGatherer
     public void closeSession(AMQSessionModel session, AMQConstant cause, String message) throws AMQException;
 
     public long getConnectionId();
-    
+
     /**
      * Get a list of all sessions using this connection.
-     * 
+     *
      * @return a list of {@link AMQSessionModel}s
      */
     public List<AMQSessionModel> getSessionModels();

@@ -25,23 +25,19 @@ import org.wso2.andes.server.registry.ApplicationRegistry;
 import org.wso2.andes.server.virtualhost.VirtualHostRegistry;
 import org.wso2.andes.transport.network.NetworkConnection;
 
-public class AMQProtocolEngineFactory implements ProtocolEngineFactory
-{
+public class AMQProtocolEngineFactory implements ProtocolEngineFactory {
     private VirtualHostRegistry _vhosts;
 
-    public AMQProtocolEngineFactory()
-    {
+    public AMQProtocolEngineFactory() {
         this(1);
     }
-    
-    public AMQProtocolEngineFactory(Integer port)
-    {
+
+    public AMQProtocolEngineFactory(Integer port) {
         _vhosts = ApplicationRegistry.getInstance().getVirtualHostRegistry();
     }
-   
-    
-    public ProtocolEngine newProtocolEngine(NetworkConnection network)
-    {
+
+
+    public ProtocolEngine newProtocolEngine(NetworkConnection network) {
         return new AMQProtocolEngine(_vhosts, network);
     }
 }
