@@ -16,19 +16,21 @@
  * under the License.
  */
 
-
-package org.wso2.andes.configuration.enums;
+package org.wso2.andes.kernel;
 
 /**
- * Representation of different topic matching algorithm used by message broker
+ * Disruptor task used to asynchronously communicate safe zone of this node to the coordinator and retrieve the
+ * derived safe zone value for the whole cluster.
  */
-public enum TopicMatchingSelection {
-    /**
-     * Simple iterative method for topic matching 
-     */
-    SIMPLE,
-    /**
-     * Inverse bitmaps based topic matching
-     */
-    BITMAPS
+public class SafeZoneUpdateEventTriggeringTask implements Runnable{
+
+    private InboundEventManager inboundEventManager;
+
+    SafeZoneUpdateEventTriggeringTask(InboundEventManager inboundEventManager) {
+         this.inboundEventManager = inboundEventManager;
+    }
+    @Override
+    public void run() {
+         inboundEventManager.updateSlotDeletionSafeZone();
+    }
 }
