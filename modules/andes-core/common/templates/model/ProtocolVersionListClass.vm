@@ -148,6 +148,7 @@ public class ProtocolVersion  implements Comparable
 	                         new HashMap<String, ProtocolVersion>();
     private static final ProtocolVersion _defaultVersion;							 
 
+    public static final ProtocolVersion v1_00 = new ProtocolVersion((byte)1,(byte)0);
 	
     public static final ProtocolVersion v0_10 = new ProtocolVersion((byte)0,(byte)10);
 
@@ -161,6 +162,8 @@ public class ProtocolVersion  implements Comparable
     {
         SortedSet<ProtocolVersion> versions = new TreeSet<ProtocolVersion>();
 
+        versions.add(v1_00);
+        _nameToVersionMap.put("1-00", v1_00);
 		versions.add(v0_10);
 		_nameToVersionMap.put("0-10", v0_10);
 #foreach( $version in $model.getVersionSet() )

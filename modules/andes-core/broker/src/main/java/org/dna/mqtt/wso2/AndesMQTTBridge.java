@@ -29,7 +29,7 @@ import java.nio.ByteBuffer;
 
 
 /**
- * The class will be resposible to mediate between the MQTT library and the Andes kernal.
+ * The class will be responsible to mediate between the MQTT library and the Andes kernal.
  * When writing methods all the connecting logic between the MQTT protocol engine and kernal
  * should go through this class
  * This way a clear abstraction could be maintained between MQTT protocol class and the logic
@@ -47,7 +47,7 @@ public final class AndesMQTTBridge {
 
 
     /**
-     * The class will be delcared as singleton since only one instance of this should be created on the JVM
+     * The class will be declared as singleton since only one instance of this should be created on the JVM
      * We cannot define multiple bridge instances since all the state between the topics will be maintained here
      */
     private AndesMQTTBridge() {
