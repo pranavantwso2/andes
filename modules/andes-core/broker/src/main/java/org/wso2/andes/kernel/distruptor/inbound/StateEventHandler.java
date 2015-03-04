@@ -28,7 +28,7 @@ import org.wso2.andes.kernel.slot.SlotMessageCounter;
 import org.wso2.andes.server.stats.PerformanceCounter;
 
 import java.util.List;
-
+// here
 /**
  * State changes related to Andes for inbound events are handled through this handler
  */
@@ -53,7 +53,8 @@ public class StateEventHandler implements EventHandler<InboundEvent> {
             log.debug("[ sequence " + sequence + " ] Event received from disruptor. Event type: "
                     + event.getEventType() + " " + this);
         }
-        
+
+        // here
         try {
             switch (event.getEventType()) {
                 case MESSAGE_EVENT:
@@ -98,6 +99,8 @@ public class StateEventHandler implements EventHandler<InboundEvent> {
         }
         return count;
     }
+
+    // here
 
     /**
      * Update slot message counters and queue counters

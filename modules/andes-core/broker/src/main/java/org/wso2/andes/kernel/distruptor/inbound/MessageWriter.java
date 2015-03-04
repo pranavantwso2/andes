@@ -47,6 +47,8 @@ public class MessageWriter implements BatchEventHandler {
 
     }
 
+    // here
+
     @Override
     public void onEvent(final List<InboundEvent> eventList) throws Exception {
 
