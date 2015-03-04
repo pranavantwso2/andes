@@ -56,6 +56,7 @@ import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 
 import org.apache.qpid.proton.amqp.Binary;
+import org.wso2.andes.amqp.QpidAMQPBridgeForOnePointZero;
 
 public class MessengerImpl implements Messenger
 {
@@ -310,6 +311,7 @@ public class MessengerImpl implements Messenger
         }
 
         rewriteMessage(m);
+        //QpidAMQPBridgeForOnePointZero.getInstance().messageReceived(m,);
 
         try {
             adjustReplyTo(m);
