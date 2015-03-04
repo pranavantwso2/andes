@@ -22,7 +22,7 @@
 @REM Use generated qpid.keystore as the brokers keystore
 @REM Use generated qpid.truststore as client/consoles truststore
 @REM All passwords have value: password
-
+\
 @REM Create Broker Keystore:
 keytool -genkey -alias qpidBroker -keyalg RSA -validity 365 -keystore qpid.keystore -storepass password -keypass password -dname "CN=hostname, OU=OrgUnit, O=Org, L=City, C=US"
 
