@@ -20,6 +20,7 @@ package org.wso2.andes.amqp;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.qpid.proton.message.Message;
 import org.wso2.andes.AMQException;
 import org.wso2.andes.framing.abstraction.ContentChunk;
 import org.wso2.andes.kernel.*;
@@ -138,5 +139,8 @@ public class QpidAMQPBridgeForOnePointZero {
     }
 
 
+    public void messageReceived(Message message){
+
+    }
 
 }

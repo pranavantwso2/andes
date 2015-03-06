@@ -311,7 +311,7 @@ public class MessengerImpl implements Messenger
         }
 
         rewriteMessage(m);
-        //QpidAMQPBridgeForOnePointZero.getInstance().messageReceived(m,);
+        QpidAMQPBridgeForOnePointZero.getInstance().messageReceived(m);
 
         try {
             adjustReplyTo(m);

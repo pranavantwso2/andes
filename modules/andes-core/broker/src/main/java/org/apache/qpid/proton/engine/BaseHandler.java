@@ -29,7 +29,10 @@ package org.apache.qpid.proton.engine;
 public class BaseHandler implements Handler
 {
 
-    @Override public void onConnectionInit(Event e) { onUnhandled(e); }
+    @Override public void onConnectionInit(Event e)
+    {
+       e.getConnection();
+    }
     @Override public void onConnectionLocalOpen(Event e) { onUnhandled(e); }
     @Override public void onConnectionRemoteOpen(Event e) { onUnhandled(e); }
     @Override public void onConnectionLocalClose(Event e) { onUnhandled(e); }
