@@ -141,6 +141,8 @@ public class QpidAMQPBridgeForOnePointZero {
 
     public void messageReceived(Message message){
 
+        long receivedTime = System.currentTimeMillis();
+
     }
 
 }
