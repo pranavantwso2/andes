@@ -311,7 +311,6 @@ public class MessengerImpl implements Messenger
         }
 
         rewriteMessage(m);
-        QpidAMQPBridgeForOnePointZero.getInstance().messageReceived(m);
 
         try {
             adjustReplyTo(m);
@@ -470,6 +469,7 @@ public class MessengerImpl implements Messenger
                                                _incomingStore.trackEntry(entry));
 
             _incomingStore.freeEntry( entry );
+            QpidAMQPBridgeForOnePointZero.getInstance().messageReceived(message);
             return message;
         }
         return null;
