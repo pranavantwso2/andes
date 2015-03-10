@@ -886,7 +886,7 @@ public class SessionEndpoint
 
     public Collection<LinkEndpoint> getLocalLinkEndpoints()
     {
-        return new ArrayList<>(_localLinkEndpoints.keySet());
+        return new ArrayList<LinkEndpoint>(_localLinkEndpoints.keySet());
     }
 
     public boolean isEnded()

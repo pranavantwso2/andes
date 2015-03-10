@@ -76,7 +76,7 @@ public class AnnotationDecoder
         else if(value instanceof Collection)
         {
             Collection<?> list = (Collection<?>)value;
-            List<Object> convertedList = new ArrayList<>(list.size());
+            List<Object> convertedList = new ArrayList<Object>(list.size());
             for(Object o : list)
             {
                 convertedList.add(convertObject(o));

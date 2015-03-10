@@ -1561,7 +1561,7 @@ public class ConnectionEndpoint implements DescribedTypeConstructorRegistry.Sour
                 mac.init(key);
                 return mac;
             }
-            catch (NoSuchAlgorithmException | InvalidKeyException e)
+            catch (Exception e)
             {
                 throw new SaslException(e.getMessage(), e);
             }

@@ -133,7 +133,7 @@ public class AnnotationEncoder
         else if(value instanceof List)
         {
             List<?> list = (List) value;
-            List<Object> convertedList = new ArrayList<>(list.size());
+            List<Object> convertedList = new ArrayList<Object>(list.size());
             for(Object o : list)
             {
                 convertedList.add(convert(o));

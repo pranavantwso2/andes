@@ -122,7 +122,7 @@ public class JsonDecoder
                 }
                 return map;
             case BEGIN_ARRAY:
-                List<Object> list = new ArrayList<>();
+                List<Object> list = new ArrayList<Object>();
                 token = readToken(reader, tokenStack);
                 if(token.getType() != TokenType.END_MAP)
                 {
