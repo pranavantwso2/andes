@@ -95,7 +95,7 @@ public class JsonDecoder
             case NULL:
                 return token.getValue();
             case BEGIN_MAP:
-                Map<Object,Object> map = new LinkedHashMap<>();
+                Map<Object,Object> map = new LinkedHashMap<Object,Object>();
                 token = readToken(reader, tokenStack);
                 if(token.getType() != TokenType.END_MAP)
                 {

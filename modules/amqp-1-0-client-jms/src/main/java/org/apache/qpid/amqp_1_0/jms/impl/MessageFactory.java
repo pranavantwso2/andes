@@ -268,7 +268,7 @@ class MessageFactory
             subTypePart = subTypePart.substring(0,subTypePart.indexOf("(")).trim();
         }
         final String subType = subTypePart;
-        final Map<String,String> parameters = new HashMap<>();
+        final Map<String,String> parameters = new HashMap<String, String>();
 
         if(contentType.substring(subTypeSeparator +1).contains(";"))
         {

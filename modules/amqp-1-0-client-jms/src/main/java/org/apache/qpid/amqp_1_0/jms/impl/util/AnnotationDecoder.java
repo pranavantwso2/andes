@@ -47,7 +47,7 @@ import org.apache.qpid.amqp_1_0.type.UnsignedShort;
 
 public class AnnotationDecoder
 {
-    private static final Map<String,Converter> CONVERTERS = new HashMap<>();
+    private static final Map<String,Converter> CONVERTERS = new HashMap<String, Converter>();
 
 
     private final JsonDecoder _decoder = new JsonDecoder();
@@ -55,7 +55,7 @@ public class AnnotationDecoder
     public Map<Symbol,Object> decode(String value) throws IOException
     {
         Map<String,Object> map = (Map<String,Object>) _decoder.decode(new StringReader(value));
-        Map<Symbol,Object> convertedMap = new LinkedHashMap<>();
+        Map<Symbol,Object> convertedMap = new LinkedHashMap<Symbol, Object>();
         for(Map.Entry<String,Object> entry : map.entrySet())
         {
             convertedMap.put(Symbol.valueOf(entry.getKey()), convertObject(entry.getValue()));

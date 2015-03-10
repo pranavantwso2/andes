@@ -456,7 +456,7 @@ public class SessionEndpoint
 
     public void receiveFlow(final Flow flow)
     {
-        Collection<LinkEndpoint> endpoints = new ArrayList<>();
+        Collection<LinkEndpoint> endpoints = new ArrayList<LinkEndpoint>();
         synchronized(getLock())
         {
             UnsignedInteger handle = flow.getHandle();

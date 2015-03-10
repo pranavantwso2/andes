@@ -1515,7 +1515,7 @@ public class ConnectionEndpoint implements DescribedTypeConstructorRegistry.Sour
                                                + ",p=" + DatatypeConverter.printBase64Binary(clientProof);
                 return finalMessageWithProof.getBytes();
             }
-            catch (IllegalArgumentException | IOException | NoSuchAlgorithmException e)
+            catch (Exception e)
             {
                 throw new SaslException(e.getMessage(), e);
             }

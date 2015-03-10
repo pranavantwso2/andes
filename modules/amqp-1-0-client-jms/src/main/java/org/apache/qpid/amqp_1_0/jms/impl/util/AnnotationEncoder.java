@@ -53,7 +53,7 @@ public class AnnotationEncoder
 
     private Map<String, Object> convertMap(final Map<Symbol,Object> value)
     {
-        Map<String,Object> converted = new LinkedHashMap<>();
+        Map<String,Object> converted = new LinkedHashMap<String,Object>();
         for(Map.Entry<Symbol,Object> entry : value.entrySet())
         {
             converted.put(entry.getKey().toString(), convert(entry.getValue()));
