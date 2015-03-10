@@ -143,7 +143,7 @@ public class AnnotationEncoder
         else if(value instanceof Map)
         {
             Map<?,?> map = (Map<?,?>) value;
-            Map<Object,Object> convertedMap = new LinkedHashMap<>();
+            Map<Object,Object> convertedMap = new LinkedHashMap<Object, Object>();
             for(Map.Entry<?,?> entry : map.entrySet())
             {
                 convertedMap.put(convert(entry.getKey()), convert(entry.getValue()));
@@ -157,7 +157,7 @@ public class AnnotationEncoder
         else if(value.getClass().isArray())
         {
             int length = Array.getLength(value);
-            List<Object> list = new ArrayList<>(length);
+            List<Object> list = new ArrayList<Object>(length);
             for(int i = 0; i < length; i++)
             {
                 list.add(Array.get(value, i));

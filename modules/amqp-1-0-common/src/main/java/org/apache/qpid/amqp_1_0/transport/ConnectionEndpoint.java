@@ -1664,7 +1664,7 @@ public class ConnectionEndpoint implements DescribedTypeConstructorRegistry.Sour
 
                 return responseBeforeBase64.toString().getBytes(ASCII);
             }
-            catch (NoSuchAlgorithmException | InvalidKeyException e)
+            catch (Exception e)
             {
                 throw new SaslException(e.getMessage(), e);
             }
@@ -1710,7 +1710,7 @@ public class ConnectionEndpoint implements DescribedTypeConstructorRegistry.Sour
 
                 return new String(hash).getBytes("utf-8");
             }
-            catch (NoSuchAlgorithmException | UnsupportedEncodingException e)
+            catch (Exception e)
             {
                 throw new SaslException(e.getMessage(), e);
             }

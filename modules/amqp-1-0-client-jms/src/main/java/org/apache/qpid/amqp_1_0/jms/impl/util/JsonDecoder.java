@@ -152,7 +152,7 @@ public class JsonDecoder
     static final Map<Character, Token> PUNCTUATION_TOKENS;
     static
     {
-        final Map<Character, Token> tokenMap = new HashMap<>();
+        final Map<Character, Token> tokenMap = new HashMap<Character, Token>();
         tokenMap.put('{', new Token(TokenType.BEGIN_MAP, null));
         tokenMap.put('}', new Token(TokenType.END_MAP, null));
         tokenMap.put('[', new Token(TokenType.BEGIN_ARRAY, null));

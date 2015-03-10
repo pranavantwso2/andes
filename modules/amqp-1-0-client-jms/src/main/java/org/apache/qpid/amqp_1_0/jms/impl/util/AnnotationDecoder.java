@@ -233,7 +233,7 @@ public class AnnotationDecoder
         Object convert(final Object value, final AnnotationDecoder decoder)
         {
             Map<?,?> map = (Map<?,?>) value;
-            Map<Object,Object> convertedMap = new LinkedHashMap<>();
+            Map<Object,Object> convertedMap = new LinkedHashMap<Object,Object>();
             for(Map.Entry<?,?> entry : map.entrySet())
             {
                 convertedMap.put(decoder.convertObject(entry.getKey()), decoder.convertObject(entry.getValue()));
@@ -276,8 +276,8 @@ public class AnnotationDecoder
         Object convert(final Object value, final AnnotationDecoder decoder)
         {
             Collection<?> list = (Collection<?>)value;
-            List<Object> convertedList = new ArrayList<>(list.size());
-            Set<Class> objClasses = new HashSet<>();
+            List<Object> convertedList = new ArrayList<Object>(list.size());
+            Set<Class> objClasses = new HashSet<Class>();
             for(Object o : list)
             {
                 Object convertObject = decoder.convertObject(o);
@@ -375,7 +375,7 @@ public class AnnotationDecoder
 
     public static void main(String[] args) throws Exception
     {
-        Map<Symbol, Object> foo = new LinkedHashMap<>();
+        Map<Symbol, Object> foo = new LinkedHashMap<Symbol, Object>();
         foo.put(Symbol.valueOf("ARG_1"), 2);
         foo.put(Symbol.valueOf("ARG_2"), true);
         foo.put(Symbol.valueOf("ARG_3"), "wibble");
