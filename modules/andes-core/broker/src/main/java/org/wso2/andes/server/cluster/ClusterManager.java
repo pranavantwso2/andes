@@ -30,7 +30,7 @@ import org.wso2.andes.server.ClusterResourceHolder;
 import org.wso2.andes.server.cluster.coordination.CoordinationConstants;
 import org.wso2.andes.server.cluster.coordination.hazelcast.HazelcastAgent;
 import org.wso2.andes.kernel.slot.SlotCoordinationConstants;
-import org.wso2.andes.kernel.slot.SlotManager;
+import org.wso2.andes.kernel.slot.SlotManagerClusterMode;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -65,14 +65,14 @@ public class ClusterManager {
      * AndesContextStore instance
      */
     private AndesContextStore andesContextStore;
-    private SlotManager slotManager;
+    private SlotManagerClusterMode slotManager;
 
     /**
      * Create a ClusterManager instance
      */
     public ClusterManager() {
         this.andesContextStore = AndesContext.getInstance().getAndesContextStore();
-        this.slotManager = SlotManager.getInstance();
+        this.slotManager = SlotManagerClusterMode.getInstance();
     }
 
     /**
@@ -80,19 +80,14 @@ public class ClusterManager {
      *
      * @throws Exception
      */
-    public void init() throws Exception {
-        try {
-            if (!AndesContext.getInstance().isClusteringEnabled()) {
-                this.initStandaloneMode();
-                return;
-            }
+    public void init() throws AndesException, UnknownHostException {
 
-            initClusterMode();
-
-        } catch (Exception e) {
-            log.error("Error while initializing the Hazelcast coordination ", e);
-            throw e;
+        if (!AndesContext.getInstance().isClusteringEnabled()) {
+            this.initStandaloneMode();
+            return;
         }
+
+        initClusterMode();
     }
 
     /**
@@ -207,7 +202,7 @@ public class ClusterManager {
 
         clearAllPersistedStatesOfDisappearedNode(nodeId);
 
-        log.info("NodeID:" + this.nodeId);
+        log.info("Initializing Standalone Mode. Current Node ID:" + this.nodeId);
 
         andesContextStore.storeNodeDetails(nodeId, (String) AndesConfigurationManager.readValue
                 (AndesConfiguration.TRANSPORTS_BIND_ADDRESS));
@@ -218,11 +213,11 @@ public class ClusterManager {
      *
      * @throws Exception
      */
-    private void initClusterMode() throws Exception {
+    private void initClusterMode() throws AndesException {
 
         this.hazelcastAgent = HazelcastAgent.getInstance();
         this.nodeId = this.hazelcastAgent.getNodeId();
-        log.info("NodeID:" + this.nodeId);
+        log.info("Initializing Cluster Mode. Current Node ID:" + this.nodeId);
 
         //add node information to durable store
         andesContextStore.storeNodeDetails(nodeId, (String) AndesConfigurationManager.readValue
@@ -343,5 +338,9 @@ public class ClusterManager {
             }
         }
         return addresses;
+    }
+
+    public SlotManagerClusterMode getSlotManager() {
+        return slotManager;
     }
 }

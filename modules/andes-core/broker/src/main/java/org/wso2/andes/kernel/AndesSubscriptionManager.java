@@ -89,13 +89,8 @@ public class AndesSubscriptionManager {
         subscriptionStore.createDisconnectOrRemoveLocalSubscription(localSubscription, SubscriptionListener.SubscriptionChange.ADDED);
 
         //start a slot delivery worker on the destination (or topicQueue) subscription refers
-        //destination would be target queue if it is durable topic, otherwise it is queue or non durable topic
         SlotDeliveryWorkerManager slotDeliveryWorkerManager = SlotDeliveryWorkerManager.getInstance();
-        if(localSubscription.isBoundToTopic() && localSubscription.isDurable()){
-            slotDeliveryWorkerManager.startSlotDeliveryWorker(localSubscription.getStorageQueueName(), localSubscription.getTargetQueue());
-        } else {
-            slotDeliveryWorkerManager.startSlotDeliveryWorker(localSubscription.getStorageQueueName(), localSubscription.getSubscribedDestination());
-        }
+        slotDeliveryWorkerManager.startSlotDeliveryWorker(localSubscription.getStorageQueueName(), subscriptionStore.getDestination(localSubscription));
 
         //notify the local subscription change to listeners
         notifyLocalSubscriptionHasChanged(localSubscription, SubscriptionListener.SubscriptionChange.ADDED);
@@ -119,7 +114,7 @@ public class AndesSubscriptionManager {
                 //close and notify
                 subscriptionStore.createDisconnectOrRemoveClusterSubscription(sub, SubscriptionListener.SubscriptionChange.DELETED);
                 //this is like closing local subscribers of that node thus we need to notify to cluster
-                notifyLocalSubscriptionHasChanged((LocalSubscription) sub, SubscriptionListener.SubscriptionChange.DELETED);
+                notifyClusterSubscriptionHasChanged(sub, SubscriptionListener.SubscriptionChange.DELETED);
             }
         }
 
@@ -133,18 +128,13 @@ public class AndesSubscriptionManager {
      */
     public void closeAllLocalSubscriptionsOfNode() throws AndesException {
 
+        log.info("Closing all existing local subscriptions.");
         List<LocalSubscription> activeSubscriptions = subscriptionStore.getActiveLocalSubscribers(true);
         activeSubscriptions.addAll(subscriptionStore.getActiveLocalSubscribers(false));
 
         if (!activeSubscriptions.isEmpty()) {
             for (LocalSubscription sub : activeSubscriptions) {
-                //close and notify
-                try {
-                    subscriptionStore.createDisconnectOrRemoveLocalSubscription(sub, SubscriptionListener.SubscriptionChange.DELETED);
-                } catch (SubscriptionAlreadyExistsException ignore) {
-                    // newer thrown for close subscriptions
-                }
-                notifyLocalSubscriptionHasChanged(sub, SubscriptionListener.SubscriptionChange.DELETED);
+                closeLocalSubscription(sub);
             }
         }
 
@@ -182,7 +172,7 @@ public class AndesSubscriptionManager {
      * @throws AndesException
      */
     public void closeLocalSubscription(LocalSubscription subscription) throws AndesException {
-        SubscriptionListener.SubscriptionChange chageType;
+        SubscriptionListener.SubscriptionChange changeType;
         /**
          * For durable topic subscriptions, mark this as a offline subscription.
          * When a new one comes with same subID, same topic it will become online again
@@ -193,27 +183,28 @@ public class AndesSubscriptionManager {
             Boolean allowSharedSubscribers =  AndesConfigurationManager.readValue
                     (AndesConfiguration.ALLOW_SHARED_SHARED_SUBSCRIBERS);
             /**
-             * If multiple subscriptions are allowed mark as disconnected if all local
+             * Last subscriptions is allowed mark as disconnected if last local
              * subscriptions to underlying queue is gone
+             * Any subscription other than last subscription is deleted when it gone.
              */
-            if(allowSharedSubscribers) {
-                if(subscriptionStore.getActiveLocalSubscribers(subscription.getTargetQueue(),false).isEmpty()) {
-                    chageType = SubscriptionListener.SubscriptionChange.DISCONNECTED;
+            if (allowSharedSubscribers) {
+                if (subscriptionStore.getActiveLocalSubscribers(subscription.getTargetQueue(), false).size() == 1) {
+                    changeType = SubscriptionListener.SubscriptionChange.DISCONNECTED;
                 } else {
-                   return;
+                    changeType = SubscriptionListener.SubscriptionChange.DELETED;
                 }
             } else {
-                chageType = SubscriptionListener.SubscriptionChange.DISCONNECTED;
+                changeType = SubscriptionListener.SubscriptionChange.DISCONNECTED;
             }
         } else {
-            chageType = SubscriptionListener.SubscriptionChange.DELETED;
+            changeType = SubscriptionListener.SubscriptionChange.DELETED;
         }
         try {
-            subscriptionStore.createDisconnectOrRemoveLocalSubscription(subscription, chageType);
+            subscriptionStore.createDisconnectOrRemoveLocalSubscription(subscription, changeType);
         } catch (SubscriptionAlreadyExistsException ignore) {
             // never thrown for close local subscription
         }
-        notifyLocalSubscriptionHasChanged(subscription, chageType);
+        notifyLocalSubscriptionHasChanged(subscription, changeType);
     }
 
     /**

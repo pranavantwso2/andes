@@ -21,17 +21,20 @@ package org.wso2.andes.kernel;
 import org.apache.log4j.Logger;
 import org.wso2.andes.configuration.AndesConfigurationManager;
 import org.wso2.andes.configuration.enums.AndesConfiguration;
+import org.wso2.andes.kernel.slot.SlotCoordinator;
+import org.wso2.andes.kernel.slot.SlotCoordinatorCluster;
+import org.wso2.andes.kernel.slot.SlotCoordinatorStandalone;
+import org.wso2.andes.kernel.slot.SlotDeliveryWorkerManager;
+import org.wso2.andes.kernel.slot.SlotMessageCounter;
 import org.wso2.andes.server.ClusterResourceHolder;
 import org.wso2.andes.server.cluster.coordination.ClusterCoordinationHandler;
 import org.wso2.andes.server.cluster.coordination.MessageIdGenerator;
 import org.wso2.andes.server.cluster.coordination.TimeStampBasedMessageIdGenerator;
 import org.wso2.andes.server.cluster.coordination.hazelcast.HazelcastAgent;
 import org.wso2.andes.server.queue.DLCQueueUtils;
-import org.wso2.andes.kernel.slot.SlotDeliveryWorkerManager;
-import org.wso2.andes.kernel.slot.SlotManager;
-import org.wso2.andes.thrift.MBThriftClient;
 import org.wso2.andes.server.stats.PerformanceCounter;
 import org.wso2.andes.subscription.SubscriptionStore;
+import org.wso2.andes.thrift.MBThriftClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,16 +90,15 @@ public class MessagingEngine {
     private MessageStore messageStore;
 
     /**
-     * Reference to AndesContextStore. This holds information that is not relevant to messages or subscriptions but
-     * relevant to Andes.
-     */
-    private AndesContextStore contextStore;
-
-    /**
      * This listener is primarily added so that messaging engine and communicate a queue purge situation to the cluster.
      * Addition/Deletion of queues are done through AndesContextInformationManager
      */
     private QueueListener queueListener;
+
+    /**
+     * Slot coordinator who is responsible of coordinating with the SlotManager
+     */
+    private SlotCoordinator slotCoordinator;
 
     /**
      * private constructor for singleton pattern
@@ -124,12 +126,10 @@ public class MessagingEngine {
      * storing strategy will be set according to the configurations by calling this.
      *
      * @param messageStore MessageStore
-     * @param contextStore AndesContextStore
      * @param subscriptionStore SubscriptionStore
      * @throws AndesException
      */
     public void initialise(MessageStore messageStore,
-                           AndesContextStore contextStore,
                            SubscriptionStore subscriptionStore) throws AndesException {
 
         configureMessageIDGenerator();
@@ -144,7 +144,6 @@ public class MessagingEngine {
 
         this.messageStore = messageStore;
         this.subscriptionStore = subscriptionStore;
-        this.contextStore = contextStore;
 
         //register listeners for queue changes
         queueListener = new ClusterCoordinationHandler(HazelcastAgent.getInstance());
@@ -162,13 +161,21 @@ public class MessagingEngine {
                 schedulerPeriod, schedulerPeriod, TimeUnit.SECONDS);
 
         // This task will periodically flush message count value to the store
-        messageCountFlusher = new MessageCountFlusher(contextStore, messageCountFlushNumberGap);
+        messageCountFlusher = new MessageCountFlusher(messageStore, messageCountFlushNumberGap);
 
         asyncStoreTasksScheduler.scheduleWithFixedDelay(messageCountFlusher,
                 messageCountFlushInterval,
                 messageCountFlushInterval,
                 TimeUnit.SECONDS);
 
+        /*
+        Initialize the SlotCoordinator
+         */
+        if(AndesContext.getInstance().isClusteringEnabled()){
+          slotCoordinator = new SlotCoordinatorCluster();
+        }else {
+          slotCoordinator = new SlotCoordinatorStandalone();
+        }
     }
 
     /**
@@ -180,6 +187,18 @@ public class MessagingEngine {
      */
     public AndesMessagePart getMessageContentChunk(long messageID, int offsetInMessage) throws AndesException {
         return messageStore.getContent(messageID, offsetInMessage);
+    }
+
+    /**
+     * Read content for given message metadata list
+     *
+     * @param messageIdList message id list for the content to be retrieved
+     * @return <code>Map<Long, List<AndesMessagePart>></code> Message id and its corresponding message part list
+     * @throws AndesException
+     */
+    public Map<Long, List<AndesMessagePart>> getContent(List<Long> messageIdList) throws AndesException {
+        return messageStore.getContent(messageIdList);
+        
     }
 
     public void messagesReceived(List<AndesMessage> messageList) throws AndesException{
@@ -298,7 +317,7 @@ public class MessagingEngine {
 
         // Clear all slots assigned to the Queue. This should ideally stop any messages being buffered during the purge.
         // This call clears all slot associations for the queue in all nodes. (could take time)
-        SlotManager.getInstance().clearAllActiveSlotRelationsToQueue(destination);
+        slotCoordinator.clearAllActiveSlotRelationsToQueue(destination);
 
         // Clear in memory messages of self (node)
         clearMessagesFromQueueInMemory(destination, purgedTimestamp);
@@ -321,7 +340,7 @@ public class MessagingEngine {
         String nodeID = ClusterResourceHolder.getInstance().getClusterManager().getMyNodeID();
         String storageQueueName = AndesUtils.getStorageQueueForDestination(destination, nodeID, isTopic);
         int purgedNumOfMessages =  purgeQueueFromStore(storageQueueName);
-        log.info("Purged messages of destination " + destination);
+        log.info("Purged " + purgedNumOfMessages + " messages of destination " + destination);
         return purgedNumOfMessages;
     }
 
@@ -348,7 +367,7 @@ public class MessagingEngine {
             messageStore.deleteAllMessageMetadata(storageQueueName);
 
             // Reset message count for the specific queue
-            contextStore.resetMessageCounterForQueue(storageQueueName);
+            messageStore.resetMessageCounterForQueue(storageQueueName);
 
             // There is only 1 DLC queue per tenant. So we have to read and parse the message
             // metadata and filter messages specific to a given queue.
@@ -489,7 +508,7 @@ public class MessagingEngine {
      * @throws AndesException
      */
     public long getMessageCountOfQueue(String queueName) throws AndesException {
-        return contextStore.getMessageCountForQueue(queueName);
+        return messageStore.getMessageCountForQueue(queueName);
     }
 
     /**
@@ -603,13 +622,22 @@ public class MessagingEngine {
         if (MBThriftClient.isReconnectingStarted()) {
             MBThriftClient.setReconnectingFlag(false);
         }
-        log.info("Stopping Disruptor writing messages to store.");
+        SlotMessageCounter.getInstance().stop();
     }
 
+    /**
+     * Properly shutdown all messaging related operations / tasks
+     * @throws InterruptedException
+     */
     public void close() throws InterruptedException {
 
         stopMessageDelivery();
         stopMessageExpirationWorker();
+
+        completePendingStoreOperations();
+    }
+
+    public void completePendingStoreOperations() throws InterruptedException {
         try {
             asyncStoreTasksScheduler.shutdown();
             asyncStoreTasksScheduler.awaitTermination(5, TimeUnit.SECONDS);
@@ -650,5 +678,10 @@ public class MessagingEngine {
         if (messageExpirationWorker != null && messageExpirationWorker.isWorking()) {
             messageExpirationWorker.stopWorking();
         }
+    }
+
+
+    public SlotCoordinator getSlotCoordinator() {
+        return slotCoordinator;
     }
 }

@@ -20,17 +20,19 @@ package org.wso2.andes.kernel;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.andes.amqp.QpidAMQPBridge;
 import org.wso2.andes.configuration.AndesConfigurationManager;
 import org.wso2.andes.configuration.StoreConfiguration;
 import org.wso2.andes.configuration.enums.AndesConfiguration;
+import org.wso2.andes.kernel.slot.SlotManagerClusterMode;
 import org.wso2.andes.server.ClusterResourceHolder;
 import org.wso2.andes.server.cluster.ClusterManagementInformationMBean;
 import org.wso2.andes.server.cluster.ClusterManager;
 import org.wso2.andes.server.cluster.coordination.hazelcast.HazelcastAgent;
 import org.wso2.andes.server.information.management.MessageStatusInformationMBean;
 import org.wso2.andes.server.information.management.SubscriptionManagementInformationMBean;
-import org.wso2.andes.kernel.slot.SlotManager;
 import org.wso2.andes.server.queue.DLCQueueUtils;
+import org.wso2.andes.server.registry.ApplicationRegistry;
 import org.wso2.andes.thrift.MBThriftServer;
 import org.wso2.andes.server.virtualhost.VirtualHost;
 import org.wso2.andes.server.virtualhost.VirtualHostConfigSynchronizer;
@@ -38,6 +40,8 @@ import org.wso2.andes.subscription.SubscriptionStore;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.user.api.UserStoreException;
 
+import javax.management.JMException;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -62,10 +66,16 @@ public class AndesKernelBoot {
     private static AndesContextStore contextStore;
 
     /**
+     * This is used by independent worker threads to identify if the kernel is performing shutdown operations.
+     */
+    private static boolean isKernelShuttingDown = false;
+
+    /**
      * This will boot up all the components in Andes kernel and bring the server to working state
      */
-    public static void bootAndesKernel() throws Exception {
+    public static void bootAndesKernel() throws AndesException, UnknownHostException, JMException {
 
+        isKernelShuttingDown = false;
         //loadConfigurations - done from outside
         //startAndesStores - done from outside
         int threadPoolCount = 1;
@@ -149,7 +159,7 @@ public class AndesKernelBoot {
             if (log.isDebugEnabled()) {
                 log.debug("Created a slot with " + messageList.size() + " messages for queue (" + queueName + ")");
             }
-            SlotManager.getInstance().updateMessageID(queueName, HazelcastAgent.getInstance().getNodeId(), firstMessageID, lastMessageID);
+            SlotManagerClusterMode.getInstance().updateMessageID(queueName, HazelcastAgent.getInstance().getNodeId(), firstMessageID, lastMessageID);
 
             // We need to increment lastMessageID since the getNextNMessageMetadataFromQueue returns message list
             // including the given starting ID.
@@ -171,19 +181,16 @@ public class AndesKernelBoot {
     /**
      * This will trigger graceful shutdown of andes broker
      *
-     * @throws Exception
+     * @throws AndesException
      */
-    public static void shutDownAndesKernel() throws Exception {
+    public static void shutDownAndesKernel() throws AndesException {
 
-        stopMessaging();
-        stopThriftServer();
-        unregisterMBeans();
-        cleanUpAndNotifyCluster();
-        stopHouseKeepingThreads();
-        stopAndesComponents();
-        //close stores
-        AndesContext.getInstance().getAndesContextStore().close();
+        // Set flag so independent threads can act accordingly
+        isKernelShuttingDown = true;
+
+        // Trigger Shutdown Event
         Andes.getInstance().shutDown();
+
     }
 
     /**
@@ -225,9 +232,6 @@ public class AndesKernelBoot {
         ClusterResourceHolder.getInstance().setSubscriptionManager(subscriptionManager);
         subscriptionManager.init();
 
-        //create AMQP Constructs store
-        AMQPConstructStore amqpConstructStore = new AMQPConstructStore();
-        AndesContext.getInstance().setAMQPConstructStore(amqpConstructStore);
 
         // create a message store and initialise messaging engine
         String messageStoreClassName = virtualHostsConfiguration.getMessageStoreClassName();
@@ -241,18 +245,22 @@ public class AndesKernelBoot {
         }
 
         MessageStore messageStore = (MessageStore) messageStoreInstance;
-        messageStore.initializeMessageStore(
-                virtualHostsConfiguration.getMessageStoreProperties()
-        );
+        messageStore.initializeMessageStore(andesContextStore,
+                virtualHostsConfiguration.getMessageStoreProperties());
         log.info("Andes MessageStore initialised with " + messageStoreClassName);
-        
+
         MessagingEngine messagingEngine = MessagingEngine.getInstance();
-        messagingEngine.initialise(messageStore, andesContextStore,subscriptionStore);
+        messagingEngine.initialise(messageStore, subscriptionStore);
         AndesKernelBoot.messageStore = messageStore;
+
+        //create AMQP Constructs store
+        AMQPConstructStore amqpConstructStore = new AMQPConstructStore(contextStore, messageStore);
+        AndesContext.getInstance().setAMQPConstructStore(amqpConstructStore);
 
         // initialise Andes context information related manager class
         AndesContextInformationManager contextInformationManager = 
-                new AndesContextInformationManager(subscriptionStore);
+                new AndesContextInformationManager(amqpConstructStore, subscriptionStore,
+                                                   contextStore, messageStore);
         
         // When message stores are initialised initialise Andes as well.
         Andes.getInstance().initialise(subscriptionStore, messagingEngine,
@@ -272,7 +280,7 @@ public class AndesKernelBoot {
      *
      * @throws Exception
      */
-    public static void syncNodeWithClusterState() throws Exception {
+    public static void syncNodeWithClusterState() throws AndesException {
         //at the startup reload exchanges/queues/bindings and subscriptions
         log.info("Syncing exchanges, queues, bindings and subscriptions");
         ClusterResourceHolder.getInstance().getAndesRecoveryTask()
@@ -282,13 +290,12 @@ public class AndesKernelBoot {
     /**
      * clean up broker states and notify the cluster
      *
-     * @throws Exception
+     * @throws AndesException
      */
-    private static void cleanUpAndNotifyCluster() throws Exception {
+    private static void cleanUpAndNotifyCluster() throws AndesException {
         //at the shutDown close all localSubscriptions and notify cluster
-        log.info("Closing all local subscriptions existing...");
-        ClusterResourceHolder.getInstance().getSubscriptionManager()
-                             .closeAllLocalSubscriptionsOfNode();
+
+        ClusterResourceHolder.getInstance().getSubscriptionManager().closeAllLocalSubscriptionsOfNode();
         // notify cluster this MB node is shutting down. For other nodes to do recovery tasks
         ClusterResourceHolder.getInstance().getClusterManager().shutDownMyNode();
     }
@@ -312,7 +319,7 @@ public class AndesKernelBoot {
      *
      * @throws Exception
      */
-    private static void stopHouseKeepingThreads() throws Exception {
+    public static void stopHouseKeepingThreads() {
         log.info("Stop syncing exchanges, queues, bindings and subscriptions...");
         int threadTerminationTimePerod = 20; // seconds
         try {
@@ -320,9 +327,9 @@ public class AndesKernelBoot {
             andesRecoveryTaskScheduler
                     .awaitTermination(threadTerminationTimePerod, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             andesRecoveryTaskScheduler.shutdownNow();
             log.warn("Recovery task scheduler is forcefully shutdown.");
-            throw e;
         }
 
     }
@@ -332,7 +339,7 @@ public class AndesKernelBoot {
      *
      * @throws Exception
      */
-    public static void registerMBeans() throws Exception {
+    public static void registerMBeans() throws JMException {
 
         ClusterManagementInformationMBean clusterManagementMBean = new
                 ClusterManagementInformationMBean(
@@ -349,20 +356,11 @@ public class AndesKernelBoot {
     }
 
     /**
-     * unregister any MBeans registered
-     *
-     * @throws Exception
-     */
-    private static void unregisterMBeans() throws Exception {
-
-    }
-
-    /**
      * start andes components
      *
      * @throws Exception
      */
-    public static void startAndesComponents() throws Exception {
+    public static void startAndesComponents() throws AndesException, UnknownHostException {
 
         /**
          * initialize cluster manager for managing nodes in MB cluster
@@ -381,18 +379,9 @@ public class AndesKernelBoot {
         log.info("Reinitializing Andes Stores...");
         StoreConfiguration virtualHostsConfiguration =
                 AndesContext.getInstance().getStoreConfiguration();
-        messageStore.initializeMessageStore(virtualHostsConfiguration.getMessageStoreProperties());
         AndesContextStore andesContextStore = AndesContext.getInstance().getAndesContextStore();
         andesContextStore.init(virtualHostsConfiguration.getContextStoreProperties());
-    }
-
-    /**
-     * Stop andes components
-     *
-     * @throws Exception
-     */
-    private static void stopAndesComponents() throws Exception {
-
+        messageStore.initializeMessageStore(andesContextStore, virtualHostsConfiguration.getMessageStoreProperties());
     }
 
     /**
@@ -400,7 +389,7 @@ public class AndesKernelBoot {
      *
      * @throws Exception
      */
-    public static void startMessaging() throws Exception {
+    public static void startMessaging() {
         Andes.getInstance().startMessageDelivery();
 
         // NOTE: Feature Message Expiration moved to a future release
@@ -408,16 +397,17 @@ public class AndesKernelBoot {
     }
 
     /**
-     * Close transports and stop message delivery
+     * Stop worker threads, close transports and stop message delivery
      *
-     * @throws Exception
      */
-    private static void stopMessaging() throws Exception {
+    private static void stopMessaging() {
         // NOTE: Feature Message Expiration moved to a future release
 //        Andes.getInstance().stopMessageExpirationWorker();
 
         //this will un-assign all slots currently owned
         Andes.getInstance().stopMessageDelivery();
+
+
     }
 
 
@@ -449,5 +439,9 @@ public class AndesKernelBoot {
         } catch (UserStoreException e) {
             throw new AndesException("Error getting super tenant username", e);
         }
+    }
+
+    public static boolean isKernelShuttingDown() {
+        return isKernelShuttingDown;
     }
 }

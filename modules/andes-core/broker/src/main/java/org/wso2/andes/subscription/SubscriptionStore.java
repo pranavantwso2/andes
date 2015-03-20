@@ -85,26 +85,55 @@ public class SubscriptionStore {
     }
 
     /**
-     * get all CLUSTER subscription entries subscribed for a queue/topic
+     * Get all cluster subscription entries subscribed for a queue/topic.
      *
-     * @param destination queue/topic name
-     * @param isTopic     is requesting topic subscriptions
-     * @return list of andes subscriptions
+     * @param destination Queue/Topic name
+     * @param isTopic     Is requesting topic subscriptions
+     * @return List of andes subscriptions
      * @throws AndesException
      */
-    public List<AndesSubscription> getAllSubscribersForDestination(String destination, boolean isTopic) throws AndesException {
-        // returing empty arraylist if requested map is empty
+    public List<AndesSubscription> getAllSubscribersForDestination(String destination, boolean isTopic)
+                                                                        throws AndesException {
         if (isBitmap) {
             if (isTopic) {
-                return new ArrayList<AndesSubscription>(subscriptionBitMapHandler.getAllClusteredSubscribedForDestination(destination) == null ? new ArrayList<AndesSubscription>() : subscriptionBitMapHandler.getAllClusteredSubscribedForDestination(destination));
+                if (null == subscriptionBitMapHandler
+                        .getAllClusteredSubscribedForDestination(destination)) {
+                    // Returning an empty list if requested map is empty.
+                    return Collections.emptyList();
+                } else {
+                    // Returning bitmap subscription handler done through bitwise mapping.
+                    return new ArrayList<AndesSubscription>(subscriptionBitMapHandler
+                                                                    .getAllClusteredSubscribedForDestination(destination));
+                }
             } else {
-                return new ArrayList<AndesSubscription>(clusterQueueSubscriptionMap.get(destination) == null ? new ArrayList<AndesSubscription>() : clusterQueueSubscriptionMap.get(destination));
+                if (null == clusterQueueSubscriptionMap.get(destination)) {
+                    // Returning an empty list if requested map is empty.
+                    return Collections.emptyList();
+                } else {
+                    // Returning queue subscriptions
+                    return new ArrayList<AndesSubscription>(clusterQueueSubscriptionMap
+                                                                    .get(destination));
+                }
             }
         } else {
             if (isTopic) {
-                return new ArrayList<AndesSubscription>(clusterTopicSubscriptionMap.get(destination) == null ? new ArrayList<AndesSubscription>() : clusterTopicSubscriptionMap.get(destination));
+                if (null == clusterTopicSubscriptionMap.get(destination)) {
+                    // Returning an empty list if requested map is empty.
+                    return Collections.emptyList();
+                } else {
+                    // Returning topic subscriptions
+                    return new ArrayList<AndesSubscription>(clusterTopicSubscriptionMap
+                                                                    .get(destination));
+                }
             } else {
-                return new ArrayList<AndesSubscription>(clusterQueueSubscriptionMap.get(destination) == null ? new ArrayList<AndesSubscription>() : clusterQueueSubscriptionMap.get(destination));
+                if (null == clusterQueueSubscriptionMap.get(destination)) {
+                    // Returning an empty list if requested map is empty.
+                    return Collections.emptyList();
+                } else {
+                    // Returning queue subscriptions
+                    return new ArrayList<AndesSubscription>(clusterQueueSubscriptionMap
+                                                                    .get(destination));
+                }
             }
         }
     }
@@ -804,8 +833,10 @@ public class SubscriptionStore {
                 //topic subscription record for all of them. Thus when closing there can be no subscriber
                 //to close in multiple durable topic subscription case
                 if (!allowSharedSubscribers) {
-                    throw new AndesException("There is no active subscriber to close subscribed to " + subscription.
-                            getSubscribedDestination() + " with the queue " + subscription.getTargetQueue());
+                    // We cannot guarantee that the subscription has not been removed before,
+                    // if the server is in shutting down state. No need to throw this exception. Warning is enough.
+                    log.warn("There is no active subscriber to close subscribed to " + subscription
+                            .getSubscribedDestination() + " with the queue " + subscription.getTargetQueue());
                 }
             } else if (hasExternalSubscriptions && type == SubscriptionChange.ADDED) {
                 if (!allowSharedSubscribers) {
@@ -819,15 +850,14 @@ public class SubscriptionStore {
 
         if (type == SubscriptionChange.ADDED || type == SubscriptionChange.DISCONNECTED) {
 
-            String destinationQueue = subscription.getTargetQueue();
-            String destinationTopic = subscription.getSubscribedDestination();
+            String destinationQueue = getDestination(subscription);
             //Store the subscription
             String destinationIdentifier = (subscription.isBoundToTopic() ? TOPIC_PREFIX : QUEUE_PREFIX) + destinationQueue;
             String subscriptionID = subscription.getSubscribedNode() + "_" + subscription.getSubscriptionID();
 
             if (type == SubscriptionChange.ADDED && !durableSubExists) {
                 andesContextStore.storeDurableSubscription(destinationIdentifier, subscriptionID, subscription.encodeAsStr());
-                log.info("New local subscription added " + subscription.toString());
+                log.info("New local subscription " + type + " " + subscription.toString());
             } else {
                 andesContextStore.updateDurableSubscription(destinationIdentifier, subscriptionID, subscription.encodeAsStr());
                 log.info("New local subscription " + type + " " + subscription.toString());
@@ -844,14 +874,14 @@ public class SubscriptionStore {
 
             } else if (subscription.getTargetQueueBoundExchangeName().equals(AMQPUtils.TOPIC_EXCHANGE_NAME)) {
                 if (isBitmap) {
-                    subscriptionBitMapHandler.addLocalSubscription(destinationTopic, subscription);
+                    subscriptionBitMapHandler.addLocalSubscription(destinationQueue, subscription);
                 } else {
-                    Map<String, LocalSubscription> localSubscriptions = localTopicSubscriptionMap.get(destinationTopic);
+                    Map<String, LocalSubscription> localSubscriptions = localTopicSubscriptionMap.get(destinationQueue);
                     if (localSubscriptions == null) {
                         localSubscriptions = new ConcurrentHashMap<String, LocalSubscription>();
                     }
                     localSubscriptions.put(subscriptionID, subscription);
-                    localTopicSubscriptionMap.put(destinationTopic, localSubscriptions);
+                    localTopicSubscriptionMap.put(destinationQueue, localSubscriptions);
                 }
             }
 
@@ -875,7 +905,7 @@ public class SubscriptionStore {
      * @throws AndesException
      */
     private LocalSubscription removeLocalSubscription(AndesSubscription subscription) throws AndesException {
-        String destination = subscription.getSubscribedDestination();
+        String destination = getDestination(subscription);
         String subscriptionID = subscription.getSubscriptionID();
         LocalSubscription subscriptionToRemove = null;
         //check queue local subscriptions
@@ -932,7 +962,7 @@ public class SubscriptionStore {
             if (log.isDebugEnabled())
                 log.debug("Subscription Removed Locally for  " + destination + "@" + subscriptionID + " " + subscriptionToRemove);
         } else {
-            throw new AndesException("Could not find an subscription ID " + subscriptionID + " under destination " + destination);
+            log.warn("Could not find an subscription ID " + subscriptionID + " under destination " + destination);
         }
         return subscriptionToRemove;
     }
@@ -940,11 +970,16 @@ public class SubscriptionStore {
     /**
      * @return list of ACTIVE and INACTIVE topics in cluster
      */
-    public List<String> getTopics() {
-        if (isBitmap)
+    public List<String> getTopics(boolean isDurable) {
+        if (isBitmap) {
             return new ArrayList<String>(subscriptionBitMapHandler.getAllDestinationsOfSubscriptions());
-        else
-            return new ArrayList<String>(clusterTopicSubscriptionMap.keySet());
+        }else{
+            if (!isDurable) {
+                return new ArrayList<String>(clusterTopicSubscriptionMap.keySet());
+            }else{
+                return new ArrayList<String>(clusterQueueSubscriptionMap.keySet());
+            }
+        }
 
     }
 
@@ -955,5 +990,20 @@ public class SubscriptionStore {
         QUEUE_SUBSCRIPTION,
         TOPIC_SUBSCRIPTION,
         ALL
+    }
+
+    /**
+     * Return destination based on subscription
+     * Destination would be target queue if it is durable topic, otherwise it is queue or non durable topic
+     *
+     * @param subscription subscription to get destination
+     * @return destination of subscription
+     */
+    public String getDestination(AndesSubscription subscription) {
+        if (subscription.isBoundToTopic() && subscription.isDurable()) {
+            return subscription.getTargetQueue();
+        } else {
+            return subscription.getSubscribedDestination();
+        }
     }
 }

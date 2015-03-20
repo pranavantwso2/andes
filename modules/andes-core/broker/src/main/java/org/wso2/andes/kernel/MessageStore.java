@@ -22,6 +22,7 @@ import org.wso2.andes.configuration.util.ConfigurationProperties;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Message meta data and content storing related data base types specific logic is abstracted out
@@ -35,8 +36,8 @@ public interface MessageStore {
      * @return DurableStoreConnection object created to make the connection to store
      * @throws AndesException
      */
-    public DurableStoreConnection initializeMessageStore(ConfigurationProperties
-                                                                 connectionProperties)
+    public DurableStoreConnection initializeMessageStore(AndesContextStore contextStore,
+                                                         ConfigurationProperties connectionProperties)
             throws AndesException;
 
     /**
@@ -64,6 +65,15 @@ public interface MessageStore {
      * @throws AndesException
      */
     public AndesMessagePart getContent(long messageId, int offsetValue) throws AndesException;
+
+    /**
+     * Read content for given message metadata list
+     *  
+     * @param messageIDList message id list for the content to be retrieved
+     * @return <code>Map<Long, List<AndesMessagePart>></code> Message id and its corresponding message part list
+     * @throws AndesException
+     */
+    public Map<Long, List<AndesMessagePart> > getContent(List<Long> messageIDList) throws AndesException;
 
     /**
      * store mata data of messages
@@ -220,6 +230,58 @@ public interface MessageStore {
      * @throws AndesException
      */
     public List<Long> getMessageIDsAddressedToQueue(String storageQueueName) throws AndesException;
+
+    /**
+     * Add message counting entry for queue. queue count is initialised to zero. The counter for
+     * created queue can then be incremented and decremented.
+     * @see this.removeMessageCounterForQueue this.incrementMessageCountForQueue,
+     * this.decrementMessageCountForQueue
+     *
+     * @param storageQueueName name of queue
+     */
+    public void addQueue(String storageQueueName) throws AndesException;
+
+    /**
+     * Get message count of queue
+     *
+     * @param storageQueueName name of queue
+     * @return message count
+     */
+    public long getMessageCountForQueue(String storageQueueName) throws AndesException;
+
+    /**
+     * Store level method to reset the message counter of a given queue to 0.
+     * @param storageQueueName name of the queue being purged
+     * @throws AndesException
+     */
+    public void resetMessageCounterForQueue(String storageQueueName) throws AndesException;
+
+    /**
+     * Remove Message counting entry
+     *
+     * @param storageQueueName name of the queue actually stored in DB
+     */
+    public void removeQueue(String storageQueueName) throws AndesException;
+
+
+    /**
+     * Increment message counter for a queue by a given incrementBy value
+     * @param storageQueueName      name of the queue actually stored in DB
+     * @param incrementBy           increment counter by
+     * @throws AndesException
+     */
+    public void incrementMessageCountForQueue(String storageQueueName, long incrementBy) throws AndesException;
+
+
+    /**
+     * Decrement message counter for a queue
+     *
+     * @param storageQueueName      name of the queue actually stored in DB
+     * @param decrementBy           decrement counter by
+     * @throws AndesException
+     */
+    public void decrementMessageCountForQueue(String storageQueueName, long decrementBy) throws AndesException;
+
 
     /**
      * close the message store
