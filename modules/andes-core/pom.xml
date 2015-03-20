@@ -29,9 +29,7 @@
     <artifactId>andes</artifactId>
     <packaging>pom</packaging>
     <name>WSO2 Carbon - Dependencies - Andes</name>
-    <modules>
-        <module>qpid-proton</module>
-    </modules>
+
 
     <dependencies>
         <!--if you change jython-standalone dependency you must change configuration in andes-core/common.xml as well-->
