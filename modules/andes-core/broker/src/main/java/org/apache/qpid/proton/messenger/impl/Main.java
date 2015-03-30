@@ -1,6 +1,8 @@
 package org.apache.qpid.proton.messenger.impl;
 
 import org.apache.qpid.proton.amqp.messaging.Header;
+import org.apache.qpid.proton.message.Message;
+import org.apache.qpid.proton.message.impl.MessageImpl;
 import org.apache.qpid.proton.messenger.Messenger;
 
 import java.io.IOException;
@@ -22,12 +24,13 @@ public class Main {
             mes1.setHeader(new Header());
             System.out.println(mes1.getHeader().toString());
             mes.put(mes1);
-            mes.put(mes1);
-            System.out.println(mes.incoming());
             mes.send();
-
-
-            while(mes.incoming() > 0)
+            Messenger msng = Messenger.Factory.create();
+            msng.start();
+            msng.subscribe("amqp://admin:admin@localhost:5672");
+            System.out.println(mes.incoming());
+            Message m = Message.Factory.create();
+            while(msng.incoming() > 0)
             System.out.println(mes.get());
 
         }
