@@ -89,7 +89,7 @@ public enum AndesConfiguration implements ConfigurationProperty {
      * share the messages
      */
     ALLOW_SHARED_SHARED_SUBSCRIBERS("transports/amqp/allowSharedTopicSubscriptions",
-             "false", Boolean.class),
+            "false", Boolean.class),
 
     /**
      * Enable this to support lightweight messaging with the MQTT protocol.
@@ -124,18 +124,18 @@ public enum AndesConfiguration implements ConfigurationProperty {
 
     /**
      * Class name of the authenticator to use. class should inherit from {@link org.dna.mqtt.moquette.server.IAuthenticator}
-     * <p>Note: default implementation authenticates against carbon user store based on supplied username/password     
+     * <p>Note: default implementation authenticates against carbon user store based on supplied username/password
      */
-    TRANSPORTS_MQTT_USER_AUTHENTICATOR_CLASS("transports/mqtt/security/authenticator", 
-                                             "org.wso2.carbon.andes.authentication.andes.CarbonBasedMQTTAuthenticator", String.class),
-                                              
-    
+    TRANSPORTS_MQTT_USER_AUTHENTICATOR_CLASS("transports/mqtt/security/authenticator",
+            "org.wso2.carbon.andes.authentication.andes.CarbonBasedMQTTAuthenticator", String.class),
+
+
     /**
-     * Instructs the MQTT server to sending credential is required or optional. 
+     * Instructs the MQTT server to sending credential is required or optional.
      * This behavior is subject to change in mqtt specification v 3.1.1
      */
     TRANSPORTS_MQTT_USER_ATHENTICATION("transports/mqtt/security/authentication", "OPTIONAL", MQTTUserAuthenticationScheme.class),
-                                                                                      
+
 
     /**
      * The class that is used to access an external RDBMS database to operate on messages.
@@ -218,14 +218,14 @@ public enum AndesConfiguration implements ConfigurationProperty {
      * the message sending mechanism. But the load on the data store will increase.
      */
     PERFORMANCE_TUNING_DELIVERY_PARALLEL_CONTENT_READERS("performanceTuning/delivery/parallelContentReaders", "5",
-                                                         Integer.class),
+            Integer.class),
 
     /**
      * Number of parallel delivery handlers used to send messages to subscribers. Increasing this value will speedup
      * the message sending mechanism. But the system load will increase.
      */
     PERFORMANCE_TUNING_DELIVERY_PARALLEL_DELIVERY_HANDLERS("performanceTuning/delivery/parallelDeliveryHandlers", "5",
-                                                         Integer.class),
+            Integer.class),
 
     /**
      * Content batch size for each content batch read. This is a loose guarantee.
@@ -261,7 +261,7 @@ public enum AndesConfiguration implements ConfigurationProperty {
      */
     PERFORMANCE_TUNING_PURGED_COUNT_TIMEOUT
             ("performanceTuning/inboundEvents/purgedCountTimeout", "180", Integer.class),
-    
+
     /**
      * Average batch size of the batch acknowledgement handling for message acknowledgements. Andes will be updated
      * of acknowledgements batched around this number.
@@ -273,7 +273,7 @@ public enum AndesConfiguration implements ConfigurationProperty {
      * Ack handler count for disruptor based event handling.
      */
     PERFORMANCE_TUNING_ACK_HANDLER_COUNT("performanceTuning/ackHandling/ackHandlerCount", "8",
-            Integer.class ),
+            Integer.class),
 
     /**
      * Message delivery from server to the client will be paused temporarily if number of delivered but
@@ -297,7 +297,7 @@ public enum AndesConfiguration implements ConfigurationProperty {
     PERFORMANCE_TUNING_DELETION_CONTENT_REMOVAL_TASK_INTERVAL
             ("performanceTuning/messageDeletion/contentRemovalTaskInterval", "600", Integer.class),
 
-     /**
+    /**
      * Since server startup, whenever this interval elapses, the expired messages will be cleared from the store.
      */
     PERFORMANCE_TUNING_MESSAGE_EXPIRATION_CHECK_INTERVAL
@@ -349,28 +349,28 @@ public enum AndesConfiguration implements ConfigurationProperty {
      * was enabled previously.
      */
     FLOW_CONTROL_BUFFER_BASED_LOW_LIMIT("flowControl/bufferBased" +
-                                        "/lowLimit", "100", Integer.class),
+            "/lowLimit", "100", Integer.class),
 
     /**
      * This is the per publisher buffer size high limit which enable the flow control for a channel.
      */
     FLOW_CONTROL_BUFFER_BASED_HIGH_LIMIT("flowControl/bufferBased" +
-                                         "/highLimit", "1000", Integer.class),
+            "/highLimit", "1000", Integer.class),
 
     /**
      * This is the global buffer low limit that disable the flow control globally if the flow-control
      * was enabled previously.
      */
     FLOW_CONTROL_GLOBAL_LOW_LIMIT("flowControl/global" +
-                                        "/lowLimit", "800", Integer.class),
+            "/lowLimit", "800", Integer.class),
 
     /**
-     *  This is the global buffer high limit which enable the flow control globally.
+     * This is the global buffer high limit which enable the flow control globally.
      */
     FLOW_CONTROL_GLOBAL_HIGH_LIMIT("flowControl/global" +
-                                         "/highLimit", "8000", Integer.class),
+            "/highLimit", "8000", Integer.class),
 
-     /**
+    /**
      * The time interval at which the server should check for memory consumption and apply flow control to recover.
      */
     FLOW_CONTROL_MEMORY_BASED_MEMORY_CHECK_INTERVAL("flowControl/memoryBased" +
@@ -398,12 +398,11 @@ public enum AndesConfiguration implements ConfigurationProperty {
             "/perConnectionMessageThreshold", "1000", Integer.class);
 
 
-
     private final MetaProperties metaProperties;
 
     private AndesConfiguration(String keyInFile, String defaultValue, Class<?> dataType) {
         // We need to pass the enum name as the identifier : therefore this.name()
-        this.metaProperties = new ImmutableMetaProperties(this.name(),keyInFile, defaultValue, dataType);
+        this.metaProperties = new ImmutableMetaProperties(this.name(), keyInFile, defaultValue, dataType);
     }
 
     @Override
