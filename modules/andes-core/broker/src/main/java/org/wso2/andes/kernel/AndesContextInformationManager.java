@@ -27,6 +27,7 @@ import org.wso2.andes.subscription.SubscriptionStore;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class is for managing control information of
@@ -157,8 +158,8 @@ public class AndesContextInformationManager {
      */
     public boolean checkIfQueueDeletable(String queueName) throws AndesException {
         boolean queueDeletable = false;
-        List<AndesSubscription> queueSubscriptions = subscriptionStore.getActiveClusterSubscriptionList(
-                queueName, false);
+        Set<AndesSubscription> queueSubscriptions = subscriptionStore.getActiveClusterSubscriptionList(
+                queueName, false, AndesSubscription.SubscriptionType.AMQP);
         if (queueSubscriptions.isEmpty()) {
             queueDeletable = true;
         }
@@ -184,7 +185,7 @@ public class AndesContextInformationManager {
         }
 
         //purge the queue cluster-wide
-        MessagingEngine.getInstance().purgeMessages(queueName, null, false);
+        MessagingEngine.getInstance().purgeMessages(queueName, null, false,null);
 
         // delete queue from construct store
         constructStore.removeQueue(queueName, true);
