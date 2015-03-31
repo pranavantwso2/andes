@@ -34,6 +34,7 @@ public class DestinationInfo extends BaseCommand {
     public static final byte REMOVE_OPERATION_TYPE = 1;
 
     protected ConnectionId connectionId;
+    //  Need Andes Destination
     protected ActiveMQDestination destination;
     protected byte operationType;
     protected long timeout;

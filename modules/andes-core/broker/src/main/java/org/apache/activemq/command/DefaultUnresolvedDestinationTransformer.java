@@ -53,4 +53,6 @@ public class DefaultUnresolvedDestinationTransformer implements UnresolvedDestin
     public ActiveMQDestination transform(String dest) throws JMSException {
         return new ActiveMQQueue(dest);
     }
+
+    Que
 }
