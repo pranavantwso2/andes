@@ -48,11 +48,7 @@ import javax.jms.InvalidSelectorException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.security.Principal;
-import java.security.cert.X509Certificate;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -75,7 +71,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     protected Connection protonConnection = Proton.connection();
     protected Collector eventCollector = new CollectorImpl();
 
-    public AmqpProtocolConverter(AmqpTransport transport, BrokerService brokerService) {
+    public AmqpProtocolConverter(AmqpTransport transport) {
         this.amqpTransport = transport;
         this.amqpWireFormat = transport.getWireFormat();
         //this.brokerService = brokerService;
