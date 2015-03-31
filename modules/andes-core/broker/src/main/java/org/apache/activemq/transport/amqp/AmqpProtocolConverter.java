@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.SessionId;
 import org.apache.activemq.transport.amqp.message.*;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
