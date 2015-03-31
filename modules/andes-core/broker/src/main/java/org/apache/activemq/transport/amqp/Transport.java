@@ -17,6 +17,8 @@
 package org.apache.activemq.transport.amqp;
 
 import org.apache.activemq.Service;
+import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCallback;
 
 import java.io.IOException;
 import java.net.URI;
